@@ -50,27 +50,6 @@ async def filter_and_transform(serial_num, vehicles, transmissions, integration_
 
         vehicle.date_year_and_julian = date_year_and_julian_with_tz
 
-        # Get current state for the device
-        current_state = await state_manager.get_state(
-            integration_id,
-            action_id,
-            vehicle.ats_serial_num
-        )
-
-        if current_state:
-            # Compare current state with new data
-            latest_device_timestamp = datetime.datetime.strptime(
-                current_state.get("latest_device_timestamp"),
-                '%Y-%m-%d %H:%M:%S%z'
-            )
-
-            if vehicle.date_year_and_julian <= latest_device_timestamp:
-                # Data is not new, not transform
-                logger.info(
-                    f"Excluding device ID '{vehicle.ats_serial_num}' obs '{vehicle.date_year_and_julian}'"
-                )
-                continue
-
         data = {
             "source": vehicle.ats_serial_num,
             "source_name": vehicle.ats_serial_num,
@@ -123,7 +102,14 @@ async def action_pull_observations(integration, action_config: client.PullObserv
                 if not transmissions_per_device:
                     logger.warning(f"No transmissions were pulled.")
                     return {"message": "No transmissions pulled"}
-
+    except httpx.HTTPError as e:
+        message = f"Error fetching data points/transmissions from ATS. Integration ID: {str(integration.id)} Exception: {e}"
+        logger.exception(message, extra={
+            "integration_id": str(integration.id),
+            "attention_needed": True
+        })
+        raise e
+    else:
         logger.info(f"Observations pulled with success.")
 
         for serial_num, data_points in data_points_per_device.items():
@@ -169,24 +155,5 @@ async def action_pull_observations(integration, action_config: client.PullObserv
                                     }
                                 )
                                 raise e
-                # Update states
-                state = {
-                    "latest_device_timestamp": transformed_data[-1].get("recorded_at"),
-                    "mortality": transformed_data[-1]["additional"].get("mortality")
-                }
-                await state_manager.set_state(
-                    str(integration.id),
-                    "pull_observations",
-                    state,
-                    serial_num,
-                )
                 observations_extracted += len(transformed_data)
         return {'observations_extracted': observations_extracted}
-
-    except httpx.HTTPError as e:
-        message = f"pull_observations action returned error."
-        logger.exception(message, extra={
-            "integration_id": str(integration.id),
-            "attention_needed": True
-        })
-        raise e
