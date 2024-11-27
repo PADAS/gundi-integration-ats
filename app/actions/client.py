@@ -4,7 +4,6 @@ import pydantic
 import xmltodict
 
 from datetime import datetime
-from functools import reduce
 from app.actions.configurations import (
     AuthenticateConfig,
     PullObservationsConfig
@@ -84,19 +83,12 @@ class PullObservationsDataResponse(pydantic.BaseModel):
 class PullObservationsTransmissionsResponse(pydantic.BaseModel):
     transmissions: List[TransmissionsResponse]
 
-    @pydantic.validator("transmissions")
-    def validate_and_filter_transmissions(cls, val):
+    @pydantic.validator("transmissions", pre=True)
+    def validate_transmissions(cls, val):
         if isinstance(val, list):
-            result = {
-                "transmissions": reduce(
-                    lambda acc, item: {**acc, item.collar_serial_num: item.gmt_offset},
-                    val,
-                    {}
-                )
-            }
-            return result["transmissions"]
+            return val
         # val is not a valid list, return an empty list instead
-        return {}
+        return []
 
 
 class PullObservationsBadXMLException(Exception):
@@ -270,7 +262,6 @@ async def get_transmissions_endpoint_response(integration_id, config, auth):
                         )
                         raise PullObservationsBadXMLException(message=msg, error=e)
                     else:
-                        logger.info(f"-- GMT offsets extracted from transmissions: {parsed_response.json()} --")
                         response = parsed_response.transmissions
                 else:
                     logger.info(f"-- No transmissions extracted for endpoint {endpoint} --")
