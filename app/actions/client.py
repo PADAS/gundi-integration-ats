@@ -4,6 +4,7 @@ import pydantic
 import xmltodict
 
 from datetime import datetime
+from functools import reduce
 from app.actions.configurations import (
     AuthenticateConfig,
     PullObservationsConfig
@@ -83,12 +84,19 @@ class PullObservationsDataResponse(pydantic.BaseModel):
 class PullObservationsTransmissionsResponse(pydantic.BaseModel):
     transmissions: List[TransmissionsResponse]
 
-    @pydantic.validator("transmissions", pre=True)
-    def validate_transmissions(cls, val):
+    @pydantic.validator("transmissions")
+    def validate_and_filter_transmissions(cls, val):
         if isinstance(val, list):
-            return val
+            result = {
+                "transmissions": reduce(
+                    lambda acc, item: {**acc, item.collar_serial_num: item.gmt_offset},
+                    val,
+                    {}
+                )
+            }
+            return result["transmissions"]
         # val is not a valid list, return an empty list instead
-        return []
+        return {}
 
 
 class PullObservationsBadXMLException(Exception):
@@ -262,16 +270,8 @@ async def get_transmissions_endpoint_response(integration_id, config, auth):
                         )
                         raise PullObservationsBadXMLException(message=msg, error=e)
                     else:
-                        response_per_device = {}
-                        # save data points per serial num
-                        serial_nums = set([v.collar_serial_num for v in parsed_response.transmissions])
-                        for serial_num in serial_nums:
-                            response_per_device[serial_num] = [
-                                point for point in parsed_response.transmissions if serial_num == point.collar_serial_num
-                            ]
-                            logger.info(
-                                f"-- Extracted {len(response_per_device[serial_num])} transmissions for device {serial_num} --")
-                        response = response_per_device
+                        logger.info(f"-- GMT offsets extracted from transmissions: {parsed_response.json()} --")
+                        response = parsed_response.transmissions
                 else:
                     logger.info(f"-- No transmissions extracted for endpoint {endpoint} --")
                     response = {}
