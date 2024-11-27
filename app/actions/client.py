@@ -158,7 +158,7 @@ async def get_data_endpoint_response(integration_id, config, auth):
             logger.info(f"-- Parsing response (xmltodict) --")
             parsed_xml = xmltodict.parse(response.text)
         except (xmltodict.ParsingInterrupted, ExpatError) as e:
-            msg = f"Error while parsing XML from 'data' endpoint. Endpoint: {endpoint} Username: {auth.username}"
+            msg = f"Error while parsing XML from 'data' endpoint. Integration ID: {integration_id} Username: {auth.username}"
             logger.exception(
                 msg,
                 extra={
@@ -173,7 +173,7 @@ async def get_data_endpoint_response(integration_id, config, auth):
                 data_xml_tag = parsed_xml["DataSet"].get("diffgr:diffgram", {})
                 data = data_xml_tag.get("NewDataSet", {})
             except KeyError as e:
-                msg = f"Error while parsing 'data' response from XML. Endpoint: {endpoint} Username: {auth.username}"
+                msg = f"Error while parsing 'data' response from XML. Integration ID: {integration_id} Username: {auth.username}"
                 logger.exception(
                     msg,
                     extra={
@@ -190,7 +190,7 @@ async def get_data_endpoint_response(integration_id, config, auth):
                             {"vehicles": data.get("Table", [])}
                         )
                     except pydantic.ValidationError as e:
-                        msg = f"Error while parsing 'PullObservationsDataResponse' response from XML (data). Endpoint: {endpoint} Username: {auth.username}"
+                        msg = f"Error while parsing 'PullObservationsDataResponse' response from XML (data). Integration ID: {integration_id} Username: {auth.username}"
                         logger.exception(
                             msg,
                             extra={
@@ -227,7 +227,7 @@ async def get_transmissions_endpoint_response(integration_id, config, auth):
             logger.info(f"-- Parsing response (xmltodict) --")
             parsed_xml = xmltodict.parse(response.text)
         except (xmltodict.ParsingInterrupted, ExpatError) as e:
-            msg = f"Error while parsing XML from 'transmissions' endpoint. Endpoint: {endpoint} Username: {auth.username}"
+            msg = f"Error while parsing XML from 'transmissions' endpoint. Integration ID: {integration_id} Username: {auth.username}"
             logger.exception(
                 msg,
                 extra={
@@ -242,7 +242,7 @@ async def get_transmissions_endpoint_response(integration_id, config, auth):
                 transmissions_xml_tag = parsed_xml["DataSet"].get("diffgr:diffgram", {})
                 transmissions = transmissions_xml_tag.get("NewDataSet", {})
             except KeyError as e:
-                msg = f"Error while parsing 'transmissions' response from XML. Endpoint: {endpoint} Username: {auth.username}"
+                msg = f"Error while parsing 'transmissions' response from XML. Integration ID: {integration_id} Username: {auth.username}"
                 logger.exception(
                     msg,
                     extra={
@@ -259,7 +259,7 @@ async def get_transmissions_endpoint_response(integration_id, config, auth):
                             {"transmissions": transmissions.get("Table", [])}
                         )
                     except pydantic.ValidationError as e:
-                        msg = f"Error while parsing 'PullObservationsTransmissionsResponse' response from XML (data). Endpoint: {endpoint} Username: {auth.username}"
+                        msg = f"Error while parsing 'PullObservationsTransmissionsResponse' response from XML (data). Integration ID: {integration_id} Username: {auth.username}"
                         logger.exception(
                             msg,
                             extra={
