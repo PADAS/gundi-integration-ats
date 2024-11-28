@@ -16,15 +16,10 @@ state_manager = IntegrationStateManager()
 
 
 def extract_gmt_offsets(transmissions):
-    result = {
-        "transmissions": reduce(
-            lambda acc, item: acc.setdefault(item.collar_serial_num, item.gmt_offset) or acc,
-            transmissions,
-            {}
-        )
-    }
-
-    return result["transmissions"]
+    accumulator = {}
+    for item in transmissions:
+        accumulator.setdefault(item.collar_serial_num, item.gmt_offset)
+    return accumulator
 
 async def filter_and_transform(serial_num, vehicles, gmt_offset, integration_id, action_id):
     transformed_data = []
