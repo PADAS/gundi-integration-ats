@@ -14,11 +14,16 @@ logger = logging.getLogger(__name__)
 state_manager = IntegrationStateManager()
 
 
-def extract_gmt_offsets(transmissions):
-    accumulator = {}
-    for item in transmissions:
-        accumulator.setdefault(item.collar_serial_num, item.gmt_offset)
-    return accumulator
+def extract_gmt_offsets(transmissions, integration_id):
+    if transmissions:
+        accumulator = {}
+        for item in transmissions:
+            accumulator.setdefault(item.collar_serial_num, item.gmt_offset)
+        return accumulator
+    else:
+        logger.warning(f"No transmissions were pulled for integration ID: {integration_id}.")
+        logger.warning(f"-- Setting GMT offset to 0 for devices in integration ID: {integration_id}.")
+        return {}
 
 async def filter_and_transform(serial_num, vehicles, gmt_offset, integration_id, action_id):
     transformed_data = []
@@ -104,14 +109,9 @@ async def action_pull_observations(integration, action_config: client.PullObserv
     else:
         logger.info(f"-- Observations pulled with success for integration ID: {str(integration.id)}. --")
 
-        gmt_offsets = {}
-        if transmissions:
-            # Extract GMT offsets from transmissions
-            gmt_offsets = extract_gmt_offsets(transmissions)
-            logger.info(f"-- Integration ID: {str(integration.id)}, GMT offsets: {gmt_offsets} --")
-        else:
-            logger.warning(f"No transmissions were pulled for integration ID: {str(integration.id)}.")
-            logger.warning(f"-- Setting GMT offset to 0 for devices: {data_points_per_device.keys()} integration ID: {str(integration.id)}.")
+        # Extract GMT offsets from transmissions (if possible)
+        gmt_offsets = extract_gmt_offsets(transmissions, integration.id)
+        logger.info(f"-- Integration ID: {str(integration.id)}, GMT offsets: {gmt_offsets} --")
 
         for serial_num, data_points in data_points_per_device.items():
             transformed_data = await filter_and_transform(
