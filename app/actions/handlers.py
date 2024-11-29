@@ -104,17 +104,14 @@ async def action_pull_observations(integration, action_config: client.PullObserv
     else:
         logger.info(f"-- Observations pulled with success for integration ID: {str(integration.id)}. --")
 
+        gmt_offsets = {}
         if transmissions:
             # Extract GMT offsets from transmissions
             gmt_offsets = extract_gmt_offsets(transmissions)
+            logger.info(f"-- Integration ID: {str(integration.id)}, GMT offsets: {gmt_offsets} --")
         else:
             logger.warning(f"No transmissions were pulled for integration ID: {str(integration.id)}.")
             logger.warning(f"-- Setting GMT offset to 0 for devices: {data_points_per_device.keys()} integration ID: {str(integration.id)}.")
-            gmt_offsets = {}
-            for serial_num in data_points_per_device.keys():
-                gmt_offsets.setdefault(serial_num, 0)
-
-        logger.info(f"-- Integration ID: {str(integration.id)}, GMT offsets: {gmt_offsets} --")
 
         for serial_num, data_points in data_points_per_device.items():
             transformed_data = await filter_and_transform(
