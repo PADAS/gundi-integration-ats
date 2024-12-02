@@ -4,7 +4,6 @@ import logging
 import stamina
 import app.actions.client as client
 import app.services.gundi as gundi_tools
-from functools import reduce
 from app.services.activity_logger import activity_logger
 from app.services.state import IntegrationStateManager
 
@@ -15,11 +14,16 @@ logger = logging.getLogger(__name__)
 state_manager = IntegrationStateManager()
 
 
-def extract_gmt_offsets(transmissions):
-    accumulator = {}
-    for item in transmissions:
-        accumulator.setdefault(item.collar_serial_num, item.gmt_offset)
-    return accumulator
+def extract_gmt_offsets(transmissions, integration_id):
+    if transmissions:
+        accumulator = {}
+        for item in transmissions:
+            accumulator.setdefault(item.collar_serial_num, item.gmt_offset)
+        return accumulator
+    else:
+        logger.warning(f"No transmissions were pulled for integration ID: {integration_id}.")
+        logger.warning(f"-- Setting GMT offset to 0 for devices in integration ID: {integration_id}.")
+        return {}
 
 async def filter_and_transform(serial_num, vehicles, gmt_offset, integration_id, action_id):
     transformed_data = []
@@ -93,12 +97,8 @@ async def action_pull_observations(integration, action_config: client.PullObserv
                         auth=client.get_auth_config(integration)
                     )
                 else:
-                    logger.warning(f"No observations were pulled.")
+                    logger.warning(f"No observations were pulled for integration ID: {str(integration.id)}.")
                     return {"message": "No observations pulled"}
-
-                if not transmissions:
-                    logger.warning(f"No transmissions were pulled.")
-                    return {"message": "No transmissions pulled"}
     except httpx.HTTPError as e:
         message = f"Error fetching data points/transmissions from ATS. Integration ID: {str(integration.id)} Exception: {e}"
         logger.exception(message, extra={
@@ -107,12 +107,11 @@ async def action_pull_observations(integration, action_config: client.PullObserv
         })
         raise e
     else:
-        logger.info(f"-- Observations pulled with success. --")
+        logger.info(f"-- Observations pulled with success for integration ID: {str(integration.id)}. --")
 
-        # Extract GMT offsets from transmissions
-        gmt_offsets = extract_gmt_offsets(transmissions)
-
-        logger.info(f"-- GMT offsets: {gmt_offsets} --")
+        # Extract GMT offsets from transmissions (if possible)
+        gmt_offsets = extract_gmt_offsets(transmissions, integration.id)
+        logger.info(f"-- Integration ID: {str(integration.id)}, GMT offsets: {gmt_offsets} --")
 
         for serial_num, data_points in data_points_per_device.items():
             transformed_data = await filter_and_transform(
