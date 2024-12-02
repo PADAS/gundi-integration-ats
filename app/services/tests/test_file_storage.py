@@ -25,7 +25,7 @@ async def test_upload_file(mocker, mock_gcp_cloud_storage, integration_v2):
         settings.GCP_BUCKET_NAME,
         f"integrations/{integration_id}/{blob_name}",
         local_file,
-        metadata=metadata
+        metadata={"metadata": metadata}
     )
 
 

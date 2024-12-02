@@ -13,7 +13,10 @@ class CloudFileStorage:
 
     async def upload_file(self, integration_id, local_file_path, destination_blob_name, metadata=None):
         target_path = self.get_file_fullname(integration_id, destination_blob_name)
-        await self.storage_client.upload_from_filename(self.bucket_name, target_path, local_file_path, metadata=metadata)
+        custom_metadata = {"metadata": metadata} if metadata else None
+        await self.storage_client.upload_from_filename(
+            self.bucket_name, target_path, local_file_path, metadata=custom_metadata
+        )
 
     async def download_file(self, integration_id, source_blob_name, destination_file_path):
         source_path = self.get_file_fullname(integration_id, source_blob_name)
