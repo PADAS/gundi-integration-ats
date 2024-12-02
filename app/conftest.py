@@ -163,7 +163,7 @@ def mock_gcp_cloud_storage_client(
     mock_client.download_to_filename.return_value = async_return(None)
     mock_client.delete.return_value = async_return(None)
     mock_client.list_objects.return_value = async_return(gcp_bucket_list_response)
-    mock_client.download_metadata.return_value = async_return({})
+    mock_client.download_metadata.return_value = async_return(get_gcp_file_metadata_response)
     mock_client.__aenter__.return_value = mock_client
     mock_client.__aexit__.return_value = None
     mock_client.close.return_value = async_return(None)

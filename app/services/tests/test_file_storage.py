@@ -80,3 +80,20 @@ async def test_list_files(mocker, mock_gcp_cloud_storage, integration_v2, gcp_bu
         params={"prefix": f"integrations/{integration_id}"}
     )
     assert result == [blob["name"] for blob in gcp_bucket_list_response["items"]]
+
+
+@pytest.mark.asyncio
+async def test_get_file_metadata(mocker, mock_gcp_cloud_storage, integration_v2, get_gcp_file_metadata_response):
+    mocker.patch("app.services.file_storage.Storage", mock_gcp_cloud_storage)
+    file_storage = CloudFileStorage()
+    integration_id = str(integration_v2.id)
+    blob_name = "202412011002_points_dd65d9de-0ec8-480c-8719-c1f5ff4d639a.xml"
+
+    result = await file_storage.get_file_metadata(integration_id=integration_id, blob_name=blob_name)
+
+    storage_client = mock_gcp_cloud_storage.return_value
+    storage_client.download_metadata.assert_called_once_with(
+        settings.GCP_BUCKET_NAME,
+        f"integrations/{integration_id}/{blob_name}"
+    )
+    assert result == get_gcp_file_metadata_response["metadata"]
