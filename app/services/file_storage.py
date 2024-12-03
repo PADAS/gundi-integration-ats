@@ -52,3 +52,12 @@ class CloudFileStorage:
             with attempt:
                 response = await self.storage_client.download_metadata(self.bucket_name, target_path)
                 return response.get('metadata', {})
+
+    async def update_file_metadata(self, integration_id, blob_name, metadata):
+        target_path = self.get_file_fullname(integration_id, blob_name)
+        custom_metadata = {"metadata": metadata}
+        for attempt in stamina.retry_context(on=(aiohttp.ClientError, asyncio.TimeoutError),
+                                             attempts=5, wait_initial=1.0, wait_max=30, wait_jitter=3.0):
+            with attempt:
+                await self.storage_client.patch_metadata(self.bucket_name, target_path, custom_metadata)
+
