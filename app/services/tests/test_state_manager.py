@@ -20,7 +20,7 @@ async def test_set_integration_state(mocker, mock_redis, integration_v2):
         state=state
     )
 
-    mock_redis.Redis.return_value.set.assert_called_once_with(
+    mock_redis.StrictRedis.return_value.set.assert_called_once_with(
         f"integration_state.{integration_id}.pull_observations.no-source",
         '{"last_execution": "' + execution_timestamp + '"}'
     )
@@ -39,7 +39,7 @@ async def test_get_integration_state(mocker, mock_redis, integration_v2, mock_in
     )
 
     assert state == mock_integration_state
-    mock_redis.Redis.return_value.get.assert_called_once_with(
+    mock_redis.StrictRedis.return_value.get.assert_called_once_with(
         f"integration_state.{integration_id}.pull_observations.no-source"
     )
 
@@ -62,7 +62,7 @@ async def test_delete_integration_state(mocker, mock_redis, integration_v2):
         state=state
     )
 
-    mock_redis.Redis.return_value.set.assert_called_once_with(
+    mock_redis.StrictRedis.return_value.set.assert_called_once_with(
         f"integration_state.{integration_id}.pull_observations.no-source",
         '{"last_execution": "' + execution_timestamp + '"}'
     )
@@ -75,7 +75,7 @@ async def test_delete_integration_state(mocker, mock_redis, integration_v2):
         # No source set
     )
 
-    mock_redis.Redis.return_value.delete.assert_called_once_with(
+    mock_redis.StrictRedis.return_value.delete.assert_called_once_with(
         f"integration_state.{integration_id}.pull_observations.no-source"
     )
 
@@ -94,7 +94,7 @@ async def test_set_source_state(mocker, mock_redis, integration_v2, mock_integra
         state=mock_integration_state
     )
 
-    mock_redis.Redis.return_value.set.assert_called_once_with(
+    mock_redis.StrictRedis.return_value.set.assert_called_once_with(
         f"integration_state.{integration_id}.pull_observations.{source_id}",
         json.dumps(mock_integration_state, default=str)
     )
@@ -114,7 +114,7 @@ async def test_get_state_source_state(mocker, mock_redis, integration_v2, mock_i
     )
 
     assert state == mock_integration_state
-    mock_redis.Redis.return_value.get.assert_called_once_with(
+    mock_redis.StrictRedis.return_value.get.assert_called_once_with(
         f"integration_state.{integration_id}.pull_observations.{source_id}"
     )
 
@@ -134,7 +134,7 @@ async def test_delete_state_source_state(mocker, mock_redis, integration_v2, moc
         state=mock_integration_state
     )
 
-    mock_redis.Redis.return_value.set.assert_called_once_with(
+    mock_redis.StrictRedis.return_value.set.assert_called_once_with(
         f"integration_state.{integration_id}.pull_observations.{source_id}",
         json.dumps(mock_integration_state, default=str)
     )
@@ -147,7 +147,7 @@ async def test_delete_state_source_state(mocker, mock_redis, integration_v2, moc
         source_id=source_id
     )
 
-    mock_redis.Redis.return_value.delete.assert_called_once_with(
+    mock_redis.StrictRedis.return_value.delete.assert_called_once_with(
         f"integration_state.{integration_id}.pull_observations.{source_id}"
     )
 
@@ -161,7 +161,7 @@ async def test_group_add(mocker, mock_redis, integration_v2):
 
     await state_manager.group_add(group_name=group_name, values=files)
 
-    mock_redis.Redis.return_value.sadd.assert_called_once_with(group_name, *files)
+    mock_redis.StrictRedis.return_value.sadd.assert_called_once_with(group_name, *files)
 
 
 @pytest.mark.asyncio
@@ -174,7 +174,7 @@ async def test_group_get(mocker, mock_redis, integration_v2):
 
     await state_manager.group_get(group_name=group_name)
 
-    mock_redis.Redis.return_value.smembers.assert_called_once_with(group_name)
+    mock_redis.StrictRedis.return_value.smembers.assert_called_once_with(group_name)
 
 
 @pytest.mark.asyncio
@@ -190,7 +190,7 @@ async def test_group_move(mocker, mock_redis, integration_v2):
 
     await state_manager.group_move(from_group=group_1, to_group=group_2, values=pending_files)
 
-    mock_redis.Redis.return_value.smove.assert_called_once_with(group_1, group_2, *pending_files)
+    mock_redis.StrictRedis.return_value.smove.assert_called_once_with(group_1, group_2, *pending_files)
 
 
 @pytest.mark.asyncio
@@ -203,4 +203,4 @@ async def test_group_remove(mocker, mock_redis, integration_v2):
 
     await state_manager.group_remove(group_name=group_name, values=files)
 
-    mock_redis.Redis.return_value.srem.assert_called_once_with(group_name, *files)
+    mock_redis.StrictRedis.return_value.srem.assert_called_once_with(group_name, *files)

@@ -78,6 +78,7 @@ def mock_redis(mocker, mock_integration_state):
     redis_client.__aexit__.return_value = None
     redis_client.pipeline.return_value = redis_client
     redis.Redis.return_value = redis_client
+    redis.StrictRedis.return_value = redis_client
     return redis
 
 
