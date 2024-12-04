@@ -2,7 +2,7 @@ import datetime
 import httpx
 import logging
 import stamina
-import app.actions.client as client
+import app.actions.ats_client as client
 import app.services.gundi as gundi_tools
 from app.services.activity_logger import activity_logger
 from app.services.state import IntegrationStateManager

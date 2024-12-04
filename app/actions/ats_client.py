@@ -91,7 +91,7 @@ class PullObservationsTransmissionsResponse(pydantic.BaseModel):
         return []
 
 
-class PullObservationsBadXMLException(Exception):
+class ATSBadXMLException(Exception):
     def __init__(self, error: Exception, message: str, status_code=422):
         self.status_code = status_code
         self.message = message
@@ -140,12 +140,15 @@ def closest_transmission(transmissions, test_date):
     return [t for t in transmissions if t.DateSent == sorted_list[-1]][0]
 
 
-async def get_data_endpoint_response(integration_id, config, auth):
+async def get_data_endpoint_response(integration_id, config, auth, parse_response=False):
     endpoint = config.data_endpoint
     async with httpx.AsyncClient(timeout=120) as session:
         logger.info(f"-- Getting data points for integration ID: {integration_id} Endpoint: {endpoint} --")
         response = await session.get(endpoint, auth=(auth.username, auth.password.get_secret_value()))
         response.raise_for_status()
+        if not parse_response:
+            return response.text
+
         try:
             logger.info(f"-- Parsing response (xmltodict) --")
             parsed_xml = xmltodict.parse(response.text)
@@ -159,7 +162,7 @@ async def get_data_endpoint_response(integration_id, config, auth):
                     "username": auth.username
                 }
             )
-            raise PullObservationsBadXMLException(message=msg, error=e)
+            raise ATSBadXMLException(message=msg, error=e)
         else:
             try:
                 data_xml_tag = parsed_xml["DataSet"].get("diffgr:diffgram", {})
@@ -174,7 +177,7 @@ async def get_data_endpoint_response(integration_id, config, auth):
                         "username": auth.username
                     }
                 )
-                raise PullObservationsBadXMLException(message=msg, error=e)
+                raise ATSBadXMLException(message=msg, error=e)
             else:
                 if data:
                     try:
@@ -191,7 +194,7 @@ async def get_data_endpoint_response(integration_id, config, auth):
                                 "username": auth.username
                             }
                         )
-                        raise PullObservationsBadXMLException(message=msg, error=e)
+                        raise ATSBadXMLException(message=msg, error=e)
                     else:
                         response_per_device = {}
                         # save data points per serial num
@@ -209,12 +212,15 @@ async def get_data_endpoint_response(integration_id, config, auth):
     return response
 
 
-async def get_transmissions_endpoint_response(integration_id, config, auth):
+async def get_transmissions_endpoint_response(integration_id, config, auth, parse_response=False):
     endpoint = config.transmissions_endpoint
     async with httpx.AsyncClient(timeout=120) as session:
         logger.info(f"-- Getting transmissions for integration ID: {integration_id} Endpoint: {endpoint} --")
         response = await session.get(endpoint, auth=(auth.username, auth.password.get_secret_value()))
         response.raise_for_status()
+        if not parse_response:
+            return response.text
+
         try:
             logger.info(f"-- Parsing response (xmltodict) --")
             parsed_xml = xmltodict.parse(response.text)
@@ -228,7 +234,7 @@ async def get_transmissions_endpoint_response(integration_id, config, auth):
                     "username": auth.username
                 }
             )
-            raise PullObservationsBadXMLException(message=msg, error=e)
+            raise ATSBadXMLException(message=msg, error=e)
         else:
             try:
                 transmissions_xml_tag = parsed_xml["DataSet"].get("diffgr:diffgram", {})
@@ -243,7 +249,7 @@ async def get_transmissions_endpoint_response(integration_id, config, auth):
                         "username": auth.username
                     }
                 )
-                raise PullObservationsBadXMLException(message=msg, error=e)
+                raise ATSBadXMLException(message=msg, error=e)
             else:
                 if transmissions:
                     try:
@@ -260,7 +266,7 @@ async def get_transmissions_endpoint_response(integration_id, config, auth):
                                 "username": auth.username
                             }
                         )
-                        raise PullObservationsBadXMLException(message=msg, error=e)
+                        raise ATSBadXMLException(message=msg, error=e)
                     else:
                         response = parsed_response.transmissions
                 else:
