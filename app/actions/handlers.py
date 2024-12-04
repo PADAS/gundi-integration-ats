@@ -6,7 +6,7 @@ import app.actions.client as client
 import app.services.gundi as gundi_tools
 from app.services.activity_logger import activity_logger
 from app.services.state import IntegrationStateManager
-
+from .configurations import PullObservationsConfig, ProcessObservationsConfig
 
 logger = logging.getLogger(__name__)
 
@@ -24,6 +24,7 @@ def extract_gmt_offsets(transmissions, integration_id):
         logger.warning(f"No transmissions were pulled for integration ID: {integration_id}.")
         logger.warning(f"-- Setting GMT offset to 0 for devices in integration ID: {integration_id}.")
         return {}
+
 
 async def filter_and_transform(serial_num, vehicles, gmt_offset, integration_id, action_id):
     transformed_data = []
@@ -71,12 +72,13 @@ async def filter_and_transform(serial_num, vehicles, gmt_offset, integration_id,
 
 
 @activity_logger()
-async def action_pull_observations(integration, action_config: client.PullObservationsConfig):
+async def action_pull_observations(integration, action_config: PullObservationsConfig):
     logger.info(
         f"Executing pull_observations action with integration {integration} and action_config {action_config}..."
     )
     observations_extracted = 0
     try:
+        # ToDo: Review retry logic
         async for attempt in stamina.retry_context(
                 on=httpx.HTTPError,
                 attempts=3,
@@ -96,9 +98,12 @@ async def action_pull_observations(integration, action_config: client.PullObserv
                         config=client.get_pull_config(integration),
                         auth=client.get_auth_config(integration)
                     )
+                    observations_extracted += len(data_points_per_device)
                 else:
                     logger.warning(f"No observations were pulled for integration ID: {str(integration.id)}.")
+                    # ToDo: Log a warning in the activity logs too
                     return {"message": "No observations pulled"}
+    # ToDo: Review error handling
     except httpx.HTTPError as e:
         message = f"Error fetching data points/transmissions from ATS. Integration ID: {str(integration.id)} Exception: {e}"
         logger.exception(message, extra={
@@ -109,51 +114,62 @@ async def action_pull_observations(integration, action_config: client.PullObserv
     else:
         logger.info(f"-- Observations pulled with success for integration ID: {str(integration.id)}. --")
 
-        # Extract GMT offsets from transmissions (if possible)
-        gmt_offsets = extract_gmt_offsets(transmissions, integration.id)
-        logger.info(f"-- Integration ID: {str(integration.id)}, GMT offsets: {gmt_offsets} --")
+    return {'observations_extracted': observations_extracted}
 
-        for serial_num, data_points in data_points_per_device.items():
-            transformed_data = await filter_and_transform(
-                serial_num,
-                data_points,
-                gmt_offsets.get(serial_num, 0),
-                str(integration.id),
-                "pull_observations"
-            )
 
-            if transformed_data:
-                # Send transformed data to Sensors API V2
-                def generate_batches(iterable, n=action_config.observations_per_request):
-                    for i in range(0, len(iterable), n):
-                        yield iterable[i: i + n]
+@activity_logger()
+async def action_process_observations(integration, action_config: ProcessObservationsConfig):
+    transmissions = []  # ToDo: Read from file
+    data_points_per_device = {}  # ToDo: Read from file
+    observations_processed = 0
+    # Extract GMT offsets from transmissions (if possible)
+    gmt_offsets = extract_gmt_offsets(transmissions, integration.id)
+    logger.info(f"-- Integration ID: {str(integration.id)}, GMT offsets: {gmt_offsets} --")
 
-                for i, batch in enumerate(generate_batches(transformed_data)):
-                    async for attempt in stamina.retry_context(
-                            on=httpx.HTTPError,
-                            attempts=3,
-                            wait_initial=datetime.timedelta(seconds=10),
-                            wait_max=datetime.timedelta(seconds=10),
-                    ):
-                        with attempt:
-                            try:
-                                logger.info(
-                                    f'Sending observations batch #{i}: {len(batch)} observations. Device: {serial_num}'
-                                )
-                                await gundi_tools.send_observations_to_gundi(
-                                    observations=batch,
-                                    integration_id=integration.id
-                                )
-                            except httpx.HTTPError as e:
-                                msg = f'Sensors API returned error for integration_id: {str(integration.id)}. Exception: {e}'
-                                logger.exception(
-                                    msg,
-                                    extra={
-                                        'needs_attention': True,
-                                        'integration_id': str(integration.id),
-                                        'action_id': "pull_observations"
-                                    }
-                                )
-                                raise e
-                observations_extracted += len(transformed_data)
-        return {'observations_extracted': observations_extracted}
+    for serial_num, data_points in data_points_per_device.items():
+        transformed_data = await filter_and_transform(
+            serial_num,
+            data_points,
+            gmt_offsets.get(serial_num, 0),
+            str(integration.id),
+            "pull_observations"
+        )
+
+        if transformed_data:
+            # Send transformed data to Sensors API V2
+            def generate_batches(iterable, n=action_config.observations_per_request):
+                for i in range(0, len(iterable), n):
+                    yield iterable[i: i + n]
+
+            for i, batch in enumerate(generate_batches(transformed_data)):
+                # ToDo: Review retry logic
+                async for attempt in stamina.retry_context(
+                        on=httpx.HTTPError,
+                        attempts=3,
+                        wait_initial=datetime.timedelta(seconds=10),
+                        wait_max=datetime.timedelta(seconds=10),
+                ):
+                    with attempt:
+                        try:
+                            logger.info(
+                                f'Sending observations batch #{i}: {len(batch)} observations. Device: {serial_num}'
+                            )
+                            await gundi_tools.send_observations_to_gundi(
+                                observations=batch,
+                                integration_id=integration.id
+                            )
+                        # ToDo: Review error handling
+                        except httpx.HTTPError as e:
+                            msg = f'Sensors API returned error for integration_id: {str(integration.id)}. Exception: {e}'
+                            logger.exception(
+                                msg,
+                                extra={
+                                    'needs_attention': True,
+                                    'integration_id': str(integration.id),
+                                    'action_id': "pull_observations"
+                                }
+                            )
+                            raise e
+            observations_processed += len(transformed_data)
+
+    return {'observations_processed': observations_processed}
