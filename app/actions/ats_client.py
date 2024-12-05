@@ -2,8 +2,9 @@ import logging
 import httpx
 import pydantic
 import xmltodict
+import stamina
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from xml.parsers.expat import ExpatError
 from typing import List, Optional
 
@@ -106,6 +107,7 @@ def closest_transmission(transmissions, test_date):
     return [t for t in transmissions if t.DateSent == sorted_list[-1]][0]
 
 
+@stamina.retry(on=httpx.HTTPError, wait_initial=4.0, wait_jitter=5.0, wait_max=32.0)
 async def get_data_endpoint_response(integration_id, config, auth, parse_response=False):
     endpoint = config.data_endpoint
     async with httpx.AsyncClient(timeout=120) as session:
@@ -178,6 +180,7 @@ async def get_data_endpoint_response(integration_id, config, auth, parse_respons
     return response
 
 
+@stamina.retry(on=httpx.HTTPError, wait_initial=4.0, wait_jitter=5.0, wait_max=32.0)
 async def get_transmissions_endpoint_response(integration_id, config, auth, parse_response=False):
     endpoint = config.transmissions_endpoint
     async with httpx.AsyncClient(timeout=120) as session:
