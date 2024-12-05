@@ -107,6 +107,48 @@ def closest_transmission(transmissions, test_date):
     return [t for t in transmissions if t.DateSent == sorted_list[-1]][0]
 
 
+def parse_data_points_from_xml(xml):
+    result = {}
+    try:
+        logger.info(f"-- Parsing response (xmltodict) --")
+        parsed_xml = xmltodict.parse(xml)
+    except (xmltodict.ParsingInterrupted, ExpatError) as e:
+        msg = f"Invalid XML."
+        logger.exception(msg)
+        raise ATSBadXMLException(message=msg, error=e)
+
+    try:
+        data_xml_tag = parsed_xml["DataSet"].get("diffgr:diffgram", {})
+        data = data_xml_tag.get("NewDataSet", {})
+    except KeyError as e:
+        msg = f"Dataset or NewDataSet tag not found in XML."
+        logger.exception(msg)
+        raise ATSBadXMLException(message=msg, error=e)
+
+    if data:
+        try:
+            parsed_response = PullObservationsDataResponse.parse_obj(
+                {"vehicles": data.get("Table", [])}
+            )
+        except pydantic.ValidationError as e:
+            msg = f"Error building 'PullObservationsTransmissionsResponse'."
+            logger.exception(msg)
+            raise ATSBadXMLException(message=msg, error=e)
+
+        response_per_device = {}
+        # save data points per serial num
+        serial_nums = set([v.ats_serial_num for v in parsed_response.vehicles])
+        for serial_num in serial_nums:
+            response_per_device[serial_num] = [
+                point for point in parsed_response.vehicles if serial_num == point.ats_serial_num
+            ]
+            logger.info(
+                f"-- Extracted {len(response_per_device[serial_num])} data points for device {serial_num} --")
+        result = response_per_device
+
+    return result
+
+
 @stamina.retry(on=httpx.HTTPError, wait_initial=4.0, wait_jitter=5.0, wait_max=32.0)
 async def get_data_endpoint_response(integration_id, config, auth, parse_response=False):
     endpoint = config.data_endpoint
@@ -114,49 +156,42 @@ async def get_data_endpoint_response(integration_id, config, auth, parse_respons
         logger.info(f"-- Getting data points for integration ID: {integration_id} Endpoint: {endpoint} --")
         response = await session.get(endpoint, auth=(auth.username, auth.password.get_secret_value()))
         response.raise_for_status()
-        if not parse_response:
+        if parse_response:
+            return parse_data_points_from_xml(xml=response.text)
+        else:
             return response.text
 
+
+def parse_transmissions_from_xml(xml):
+    result = {}
+    try:
+        logger.info(f"-- Parsing transmissions XML (xmltodict) --")
+        parsed_xml = xmltodict.parse(xml)
+    except (xmltodict.ParsingInterrupted, ExpatError) as e:
+        msg = f"Invalid XML."
+        logger.exception(msg)
+        raise ATSBadXMLException(message=msg, error=e)
+
+    try:
+        transmissions_xml_tag = parsed_xml["DataSet"].get("diffgr:diffgram", {})
+        transmissions = transmissions_xml_tag.get("NewDataSet", {})
+    except KeyError as e:
+        msg = f"Dataset or NewDataSet tag not found in XML."
+        logger.exception(msg)
+        raise ATSBadXMLException(message=msg, error=e)
+
+    if transmissions:
         try:
-            logger.info(f"-- Parsing response (xmltodict) --")
-            parsed_xml = xmltodict.parse(response.text)
-        except (xmltodict.ParsingInterrupted, ExpatError) as e:
-            msg = f"Error while parsing XML from 'data' endpoint. Integration ID: {integration_id} Username: {auth.username}"
+            parsed_response = PullObservationsTransmissionsResponse.parse_obj(
+                {"transmissions": transmissions.get("Table", [])}
+            )
+        except pydantic.ValidationError as e:
+            msg = f"Error building 'PullObservationsTransmissionsResponse'."
             logger.exception(msg)
             raise ATSBadXMLException(message=msg, error=e)
         else:
-            try:
-                data_xml_tag = parsed_xml["DataSet"].get("diffgr:diffgram", {})
-                data = data_xml_tag.get("NewDataSet", {})
-            except KeyError as e:
-                msg = f"Error while parsing 'data' response from XML. Integration ID: {integration_id} Username: {auth.username}"
-                logger.exception(msg)
-                raise ATSBadXMLException(message=msg, error=e)
-            else:
-                if data:
-                    try:
-                        parsed_response = PullObservationsDataResponse.parse_obj(
-                            {"vehicles": data.get("Table", [])}
-                        )
-                    except pydantic.ValidationError as e:
-                        msg = f"Error while parsing 'PullObservationsDataResponse' response from XML (data). Integration ID: {integration_id} Username: {auth.username}"
-                        logger.exception(msg)
-                        raise ATSBadXMLException(message=msg, error=e)
-                    else:
-                        response_per_device = {}
-                        # save data points per serial num
-                        serial_nums = set([v.ats_serial_num for v in parsed_response.vehicles])
-                        for serial_num in serial_nums:
-                            response_per_device[serial_num] = [
-                                point for point in parsed_response.vehicles if serial_num == point.ats_serial_num
-                            ]
-                            logger.info(f"-- Extracted {len(response_per_device[serial_num])} data points for device {serial_num} --")
-                        response = response_per_device
-                else:
-                    logger.info(f"-- No data points extracted for endpoint {endpoint} --")
-                    response = {}
-
-    return response
+            result = parsed_response.transmissions
+    return result
 
 
 @stamina.retry(on=httpx.HTTPError, wait_initial=4.0, wait_jitter=5.0, wait_max=32.0)
@@ -166,38 +201,7 @@ async def get_transmissions_endpoint_response(integration_id, config, auth, pars
         logger.info(f"-- Getting transmissions for integration ID: {integration_id} Endpoint: {endpoint} --")
         response = await session.get(endpoint, auth=(auth.username, auth.password.get_secret_value()))
         response.raise_for_status()
-        if not parse_response:
-            return response.text
-
-        try:
-            logger.info(f"-- Parsing response (xmltodict) --")
-            parsed_xml = xmltodict.parse(response.text)
-        except (xmltodict.ParsingInterrupted, ExpatError) as e:
-            msg = f"Error while parsing XML from 'transmissions' endpoint. Integration ID: {integration_id} Username: {auth.username}"
-            logger.exception(msg)
-            raise ATSBadXMLException(message=msg, error=e)
+        if parse_response:
+            return parse_transmissions_from_xml(xml=response.text)
         else:
-            try:
-                transmissions_xml_tag = parsed_xml["DataSet"].get("diffgr:diffgram", {})
-                transmissions = transmissions_xml_tag.get("NewDataSet", {})
-            except KeyError as e:
-                msg = f"Error while parsing 'transmissions' response from XML. Integration ID: {integration_id} Username: {auth.username}"
-                logger.exception(msg)
-                raise ATSBadXMLException(message=msg, error=e)
-            else:
-                if transmissions:
-                    try:
-                        parsed_response = PullObservationsTransmissionsResponse.parse_obj(
-                            {"transmissions": transmissions.get("Table", [])}
-                        )
-                    except pydantic.ValidationError as e:
-                        msg = f"Error while parsing 'PullObservationsTransmissionsResponse' response from XML (data). Integration ID: {integration_id} Username: {auth.username}"
-                        logger.exception(msg)
-                        raise ATSBadXMLException(message=msg, error=e)
-                    else:
-                        response = parsed_response.transmissions
-                else:
-                    logger.info(f"-- No transmissions extracted for endpoint {endpoint} --")
-                    response = {}
-
-    return response
+            return response.text
