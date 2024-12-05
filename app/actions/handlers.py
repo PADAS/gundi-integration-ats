@@ -6,6 +6,7 @@ import aiohttp
 import httpx
 import logging
 import aiofiles
+from gundi_core.schemas.v2.gundi import LogLevel
 from app import settings
 import app.actions.ats_client as client
 import app.services.gundi as gundi_tools
@@ -55,7 +56,7 @@ async def filter_and_transform(serial_num, vehicles, gmt_offset, integration_id,
             integration_id=integration_id,
             action_id=action_id,
             title=message,
-            level="WARNING"
+            level=LogLevel.WARNING
         )
         gmt_offset = 0
 
@@ -210,7 +211,7 @@ async def process_data_file(file_name, integration, process_config):
             integration_id=integration_id,
             action_id="process_observations",
             title=msg,
-            level="WARNING"
+            level=LogLevel.WARNING
         )
     logger.info(f"Transmissions file {transmissions_file_name} downloaded.")
 
@@ -226,7 +227,7 @@ async def process_data_file(file_name, integration, process_config):
                 integration_id=integration_id,
                 action_id="process_observations",
                 title=msg,
-                level="WARNING"
+                level=LogLevel.WARNING
             )
 
     # Extract GMT offsets from transmissions (if possible)
@@ -245,7 +246,7 @@ async def process_data_file(file_name, integration, process_config):
                 integration_id=integration_id,
                 action_id="process_observations",
                 title=msg,
-                level="ERROR"
+                level=LogLevel.ERROR
             )
             raise e
 
@@ -319,13 +320,13 @@ async def action_process_observations(integration, action_config: ProcessObserva
                 process_config=action_config
             )
         except Exception as e:
-            msg = f"Error processing data file {file_name} for integration {integration} (skipped): {e}."
+            msg = f"Error processing data file {file_name} for integration {integration_id} (skipped): {e}."
             logger.exception(msg)
             await log_action_activity(  # Log the error so the connection is flagged as unhealthy
                 integration_id=integration_id,
                 action_id="process_observations",
                 title=msg,
-                level="ERROR"
+                level=LogLevel.ERROR
             )
             continue  # Keep processing as many files as possible
     logger.info(f"-- Observations processed with success for integration '{integration_id}'.")
