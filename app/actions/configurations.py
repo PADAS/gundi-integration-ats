@@ -16,8 +16,7 @@ class PullObservationsConfig(PullActionConfiguration):
 
 
 class ProcessObservationsConfig(PullActionConfiguration):
-    mortality_event_type: str = "mortality_event"
-    observations_per_request: int = 200
+    pass
 
 
 def get_auth_config(integration):

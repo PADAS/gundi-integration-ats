@@ -2,14 +2,15 @@ import datetime
 from enum import Enum
 import httpx
 import logging
-import stamina
 import aiofiles
+from app import settings
 import app.actions.ats_client as client
 import app.services.gundi as gundi_tools
 from app.services.activity_logger import activity_logger, log_action_activity
 from app.services.state import IntegrationStateManager
 from app.services.file_storage import CloudFileStorage
 from .configurations import PullObservationsConfig, ProcessObservationsConfig, get_auth_config, get_pull_config
+
 
 logger = logging.getLogger(__name__)
 
@@ -261,7 +262,7 @@ async def process_data_file(file_name, integration, process_config):
 
         if transformed_data:
             # Send transformed data to Sensors API V2
-            def generate_batches(iterable, n=process_config.observations_per_request):
+            def generate_batches(iterable, n=settings.OBSERVATIONS_BATCH_SIZE):
                 for i in range(0, len(iterable), n):
                     yield iterable[i: i + n]
 
