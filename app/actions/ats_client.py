@@ -122,14 +122,7 @@ async def get_data_endpoint_response(integration_id, config, auth, parse_respons
             parsed_xml = xmltodict.parse(response.text)
         except (xmltodict.ParsingInterrupted, ExpatError) as e:
             msg = f"Error while parsing XML from 'data' endpoint. Integration ID: {integration_id} Username: {auth.username}"
-            logger.exception(
-                msg,
-                extra={
-                    "attention_needed": True,
-                    "endpoint": endpoint,
-                    "username": auth.username
-                }
-            )
+            logger.exception(msg)
             raise ATSBadXMLException(message=msg, error=e)
         else:
             try:
@@ -137,14 +130,7 @@ async def get_data_endpoint_response(integration_id, config, auth, parse_respons
                 data = data_xml_tag.get("NewDataSet", {})
             except KeyError as e:
                 msg = f"Error while parsing 'data' response from XML. Integration ID: {integration_id} Username: {auth.username}"
-                logger.exception(
-                    msg,
-                    extra={
-                        "attention_needed": True,
-                        "endpoint": endpoint,
-                        "username": auth.username
-                    }
-                )
+                logger.exception(msg)
                 raise ATSBadXMLException(message=msg, error=e)
             else:
                 if data:
@@ -154,14 +140,7 @@ async def get_data_endpoint_response(integration_id, config, auth, parse_respons
                         )
                     except pydantic.ValidationError as e:
                         msg = f"Error while parsing 'PullObservationsDataResponse' response from XML (data). Integration ID: {integration_id} Username: {auth.username}"
-                        logger.exception(
-                            msg,
-                            extra={
-                                "attention_needed": True,
-                                "endpoint": endpoint,
-                                "username": auth.username
-                            }
-                        )
+                        logger.exception(msg)
                         raise ATSBadXMLException(message=msg, error=e)
                     else:
                         response_per_device = {}
@@ -195,14 +174,7 @@ async def get_transmissions_endpoint_response(integration_id, config, auth, pars
             parsed_xml = xmltodict.parse(response.text)
         except (xmltodict.ParsingInterrupted, ExpatError) as e:
             msg = f"Error while parsing XML from 'transmissions' endpoint. Integration ID: {integration_id} Username: {auth.username}"
-            logger.exception(
-                msg,
-                extra={
-                    "attention_needed": True,
-                    "endpoint": endpoint,
-                    "username": auth.username
-                }
-            )
+            logger.exception(msg)
             raise ATSBadXMLException(message=msg, error=e)
         else:
             try:
@@ -210,14 +182,7 @@ async def get_transmissions_endpoint_response(integration_id, config, auth, pars
                 transmissions = transmissions_xml_tag.get("NewDataSet", {})
             except KeyError as e:
                 msg = f"Error while parsing 'transmissions' response from XML. Integration ID: {integration_id} Username: {auth.username}"
-                logger.exception(
-                    msg,
-                    extra={
-                        "attention_needed": True,
-                        "endpoint": endpoint,
-                        "username": auth.username
-                    }
-                )
+                logger.exception(msg)
                 raise ATSBadXMLException(message=msg, error=e)
             else:
                 if transmissions:
@@ -227,14 +192,7 @@ async def get_transmissions_endpoint_response(integration_id, config, auth, pars
                         )
                     except pydantic.ValidationError as e:
                         msg = f"Error while parsing 'PullObservationsTransmissionsResponse' response from XML (data). Integration ID: {integration_id} Username: {auth.username}"
-                        logger.exception(
-                            msg,
-                            extra={
-                                "attention_needed": True,
-                                "endpoint": endpoint,
-                                "username": auth.username
-                            }
-                        )
+                        logger.exception(msg)
                         raise ATSBadXMLException(message=msg, error=e)
                     else:
                         response = parsed_response.transmissions
