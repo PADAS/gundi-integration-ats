@@ -1,5 +1,8 @@
+import asyncio
 import datetime
 from enum import Enum
+
+import aiohttp
 import httpx
 import logging
 import aiofiles
@@ -200,8 +203,8 @@ async def process_data_file(file_name, integration, process_config):
             source_blob_name=transmissions_file_name,
             destination_file_path=local_transmissions_file_path
         )
-    except httpx.HTTPStatusError as e:
-        msg = f"Error downloading transmissions file {transmissions_file_name}."
+    except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+        msg = f"Error downloading transmissions file {transmissions_file_name}: {type(e)}: {e}."
         logger.warning(msg)
         await log_action_activity(
             integration_id=integration_id,
