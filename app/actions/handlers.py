@@ -105,7 +105,7 @@ async def retrieve_transmissions(integration_id, auth_config, pull_config, file_
         metadata={
             "integration_id": integration_id,
             "ats_username": auth_config.username,
-            "status": "pending"
+            "status": FileStatus.PENDING.value
         }
     )
 
@@ -134,7 +134,7 @@ async def retrieve_data_points(integration_id, auth_config, pull_config, file_pr
         metadata={
             "integration_id": integration_id,
             "ats_username": auth_config.username,
-            "status": "pending"
+            "status": FileStatus.PENDING.value
         }
     )
 
