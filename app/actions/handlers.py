@@ -3,12 +3,11 @@ import datetime
 from enum import Enum
 
 import aiohttp
-import httpx
 import logging
 import aiofiles
 from gundi_core.schemas.v2.gundi import LogLevel
 from app import settings
-import app.actions.ats_client as client
+from app.actions import ats_client
 import app.services.gundi as gundi_tools
 from app.services.activity_logger import activity_logger, log_action_activity
 from app.services.state import IntegrationStateManager
@@ -90,7 +89,7 @@ async def filter_and_transform(serial_num, vehicles, gmt_offset, integration_id,
 
 async def retrieve_transmissions(integration_id, auth_config, pull_config, file_prefix):
     logger.info(f"Retrieving transmissions for integration '{integration_id}'...")
-    transmissions_raw_xml = await client.get_transmissions_endpoint_response(
+    transmissions_raw_xml = await ats_client.get_transmissions_endpoint_response(
         integration_id=integration_id,
         config=pull_config,
         auth=auth_config
@@ -119,7 +118,7 @@ async def retrieve_transmissions(integration_id, auth_config, pull_config, file_
 
 async def retrieve_data_points(integration_id, auth_config, pull_config, file_prefix):
     logger.info(f"Retrieving data points for integration '{integration_id}'...")
-    data_points_raw_xml = await client.get_data_endpoint_response(
+    data_points_raw_xml = await ats_client.get_data_endpoint_response(
         integration_id=integration_id,
         config=pull_config,
         auth=auth_config
@@ -219,7 +218,7 @@ async def process_data_file(file_name, integration, process_config):
     async with aiofiles.open(local_transmissions_file_path, "r") as f:
         transmissions_xml_content = await f.read()
         try:
-            transmissions = client.parse_transmissions_from_xml(xml=transmissions_xml_content)
+            transmissions = ats_client.parse_transmissions_from_xml(xml=transmissions_xml_content)
         except Exception as e:
             msg = f"Error parsing '{transmissions_file_name}': {e}. Integration ID: {integration_id}."
             logger.exception(msg)
@@ -238,7 +237,7 @@ async def process_data_file(file_name, integration, process_config):
     async with aiofiles.open(local_data_file_path, "r") as f:
         data_points_xml_content = await f.read()
         try:
-            data_points_per_device = client.parse_data_points_from_xml(xml=data_points_xml_content)
+            data_points_per_device = ats_client.parse_data_points_from_xml(xml=data_points_xml_content)
         except Exception as e:
             msg = f"Error parsing '{file_name}': {e}. Integration ID: {integration_id}."
             logger.exception(msg)
