@@ -71,16 +71,23 @@ def mock_gundi_client_v2(
     mock_client.__aenter__.return_value = mock_client
     return mock_client
 
+@pytest.fixture
+def mock_transmissions_file_name(mocker):
+    return "20241206121217722379_1eb8ba40-6312-4093-9b47-7786320b11fb_transmissions.xml"
 
 @pytest.fixture
-def mock_state_manager(mocker):
+def mock_data_file_name(mocker):
+    return "20241206121217722379_1eb8ba40-6312-4093-9b47-7786320b11fb_data_points.xml"
+
+@pytest.fixture
+def mock_state_manager(mocker, mock_transmissions_file_name, mock_data_file_name):
     mock_state_manager = mocker.MagicMock()
     mock_state_manager.get_state.return_value = async_return({})
     mock_state_manager.set_state.return_value = async_return(None)
     mock_state_manager.group_add.return_value = async_return(2)
     mock_state_manager.group_get.return_value = async_return([
-        "20241206121217722379_1eb8ba40-6312-4093-9b47-7786320b11fb_transmissions.xml",
-        "20241206121217722379_1eb8ba40-6312-4093-9b47-7786320b11fb_data_points.xml",
+        mock_transmissions_file_name,
+        mock_data_file_name,
     ])
     mock_state_manager.group_move.return_value = async_return(1)
     mock_state_manager.group_remove.return_value = async_return(1)
