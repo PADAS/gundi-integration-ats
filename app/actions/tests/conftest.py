@@ -71,6 +71,7 @@ def mock_gundi_client_v2(
     mock_client.__aenter__.return_value = mock_client
     return mock_client
 
+
 @pytest.fixture
 def mock_transmissions_file_name(mocker):
     return "20241206121217722379_1eb8ba40-6312-4093-9b47-7786320b11fb_transmissions.xml"
@@ -203,6 +204,19 @@ def mock_ats_data_parsed(mock_ats_data_response_xml):
             )
         ]
     }
+
+
+@pytest.fixture
+def mock_aiofiles(
+        mocker,
+        mock_ats_transmissions_response_xml
+):
+    mock_client = mocker.MagicMock()
+    mock_fd = mocker.MagicMock()
+    mock_fd.__aenter__.return_value = mock_fd
+    mock_fd.read.return_value = async_return(mock_ats_transmissions_response_xml)
+    mock_client.open.return_value = mock_fd
+    return mock_client
 
 
 @pytest.fixture
