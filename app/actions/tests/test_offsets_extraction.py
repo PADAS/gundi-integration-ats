@@ -1,4 +1,4 @@
-from app.actions.client import PullObservationsTransmissionsResponse
+from app.actions.ats_client import PullObservationsTransmissionsResponse
 from app.actions.handlers import extract_gmt_offsets
 
 
