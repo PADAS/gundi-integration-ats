@@ -32,15 +32,17 @@ class FileStatus(Enum):
 
 
 def extract_gmt_offsets(transmissions, integration_id):
-    if transmissions:
-        accumulator = {}
-        for item in transmissions:
-            accumulator.setdefault(item.collar_serial_num, item.gmt_offset)
-        return accumulator
-    else:
+    offsets_by_device = {}
+    if not transmissions:
         logger.warning(f"No transmissions were pulled for integration ID: {integration_id}.")
-        logger.warning(f"-- Setting GMT offset to 0 for devices in integration ID: {integration_id}.")
-        return {}
+        logger.warning(f"-- GMT offset will default to 0 (UTC) for devices in integration ID: {integration_id}.")
+        return offsets_by_device
+
+    for item in transmissions:
+        if item.gmt_offset is not None and -12 <= item.gmt_offset <= 14:
+            offsets_by_device.setdefault(item.collar_serial_num, item.gmt_offset)
+
+    return offsets_by_device
 
 
 async def filter_and_transform(serial_num, vehicles, gmt_offset, integration_id, action_id):
