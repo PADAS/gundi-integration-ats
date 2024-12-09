@@ -36,7 +36,7 @@
                 <DateYearAndJulian>2024-05-31 00:00:00.000</DateYearAndJulian>
                 <NumSats>08</NumSats>
                 <Hdop>0.9</Hdop>
-                <FixTime>039</FixTime>
+                <FixTime>038</FixTime>
                 <Dimension>3</Dimension>
                 <Activity>02</Activity>
                 <Temperature>+24</Temperature>
@@ -45,7 +45,7 @@
             </Table>
             <Table diffgr:id="Table2" msdata:rowOrder="1">
                 <AtsSerialNum>052194</AtsSerialNum>
-                <Latitude>+05.52827</Latitude>
+                <Latitude>+05.52877</Latitude>
                 <Longitude>-068.52596</Longitude>
                 <DateYearAndJulian>2024-05-31 08:00:00.000</DateYearAndJulian>
                 <NumSats>10</NumSats>
@@ -70,7 +70,6 @@
                 <Temperature>+28</Temperature>
                 <Mortality>true</Mortality>
                 <LowBattVoltage>false</LowBattVoltage>
-            </Table>
-        </NewDataSet>
+
     </diffgr:diffgram>
 </DataSet>
