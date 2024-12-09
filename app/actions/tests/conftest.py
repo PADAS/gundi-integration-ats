@@ -1,9 +1,11 @@
 import asyncio
 import pytest
 import datetime
+
+import xmltodict
 from gundi_core.schemas.v2 import Integration
 
-from app.actions.ats_client import TransmissionsResponse, DataResponse
+from app.actions.ats_client import TransmissionsResponse, DataResponse, ATSBadXMLException
 
 
 def async_return(result):
@@ -278,6 +280,42 @@ def mock_ats_client(
     ats_client_mock.get_data_endpoint_response.return_value = async_return(mock_ats_data_response_xml)
     ats_client_mock.get_transmissions_endpoint_response.return_value = async_return(mock_ats_transmissions_response_xml)
     ats_client_mock.parse_data_points_from_xml.return_value = mock_ats_data_parsed
+    ats_client_mock.parse_transmissions_from_xml.return_value = mock_ats_transmissions_parsed
+    return ats_client_mock
+
+
+@pytest.fixture
+def mock_ats_client_with_invalid_tz_offsets(
+        mocker,
+        mock_ats_data_response_xml,
+        mock_ats_transmissions_response_with_invalid_offsets,
+        mock_ats_data_parsed,
+        mock_ats_transmissions_with_invalid_offsets_parsed,
+
+):
+    ats_client_mock = mocker.MagicMock()
+    ats_client_mock.get_data_endpoint_response.return_value = async_return(mock_ats_data_response_xml)
+    ats_client_mock.get_transmissions_endpoint_response.return_value = async_return(mock_ats_transmissions_response_with_invalid_offsets)
+    ats_client_mock.parse_data_points_from_xml.return_value = mock_ats_data_parsed
+    ats_client_mock.parse_transmissions_from_xml.return_value = mock_ats_transmissions_with_invalid_offsets_parsed
+    return ats_client_mock
+
+
+@pytest.fixture
+def mock_ats_client_with_parse_error(
+        mocker,
+        mock_ats_data_response_xml,
+        mock_ats_transmissions_response_xml,
+        mock_ats_data_parsed,
+        mock_ats_transmissions_parsed,
+
+):
+    ats_client_mock = mocker.MagicMock()
+    ats_client_mock.get_data_endpoint_response.return_value = async_return(mock_ats_data_response_xml)
+    ats_client_mock.get_transmissions_endpoint_response.return_value = async_return(mock_ats_transmissions_response_xml)
+    ats_client_mock.parse_data_points_from_xml.side_effect = (
+        ATSBadXMLException(message="Invalid XML.",  error=xmltodict.ParsingInterrupted()),
+    )
     ats_client_mock.parse_transmissions_from_xml.return_value = mock_ats_transmissions_parsed
     return ats_client_mock
 
