@@ -76,9 +76,11 @@ def mock_gundi_client_v2(
 def mock_transmissions_file_name(mocker):
     return "20241206121217722379_1eb8ba40-6312-4093-9b47-7786320b11fb_transmissions.xml"
 
+
 @pytest.fixture
 def mock_data_file_name(mocker):
     return "20241206121217722379_1eb8ba40-6312-4093-9b47-7786320b11fb_data_points.xml"
+
 
 @pytest.fixture
 def mock_state_manager(mocker, mock_transmissions_file_name, mock_data_file_name):
@@ -117,6 +119,12 @@ def mock_ats_transmissions_response_xml():
 
 
 @pytest.fixture
+def mock_ats_transmissions_response_with_invalid_offsets():
+    with open("app/actions/tests/files/ats_transmissions_invalid_offsets.xml") as f:
+        return f.read()
+
+
+@pytest.fixture
 def mock_ats_transmissions_parsed(mock_ats_transmissions_response_xml):
     return [
         TransmissionsResponse(
@@ -149,30 +157,52 @@ def mock_ats_transmissions_parsed(mock_ats_transmissions_response_xml):
 
 
 @pytest.fixture
+def mock_ats_transmissions_with_invalid_offsets_parsed(mock_ats_transmissions_response_xml):
+    return [
+        TransmissionsResponse(
+            date_sent=datetime.datetime(2024, 10, 26, 23, 12, 10, 740000, tzinfo=datetime.timezone.utc),
+            collar_serial_num="052191",
+            number_fixes=21,
+            batt_voltage=7.056,
+            mortality="THIS COLLAR IS IN MORTALITY !!",
+            break_off="No",
+            sat_errors="0",
+            year_base="24",
+            day_base="294",
+            gmt_offset=25,
+            low_batt_voltage=False
+        ),
+        TransmissionsResponse(
+            date_sent=datetime.datetime(2024, 8, 7, 11, 12, 22, 430000, tzinfo=datetime.timezone.utc),
+            collar_serial_num="052194",
+            number_fixes=9,
+            batt_voltage=6.984,
+            mortality="No",
+            break_off="No",
+            sat_errors="7",
+            year_base="24",
+            day_base="217",
+            gmt_offset=-25,
+            low_batt_voltage=False
+        ),
+    ]
+
+
+@pytest.fixture
 def mock_ats_data_response_xml():
     with open("app/actions/tests/files/ats_data_points.xml") as f:
         return f.read()
 
 
 @pytest.fixture
+def mock_ats_data_response_with_invalid_xml():
+    with open("app/actions/tests/files/ats_data_points_invalid_xml.xml") as f:
+        return f.read()
+
+
+@pytest.fixture
 def mock_ats_data_parsed(mock_ats_data_response_xml):
     return {
-        "052191": [
-            DataResponse(
-                ats_serial_num="052191",
-                longitude=-68.26540,
-                latitude=5.44309,
-                date_year_and_julian=datetime.datetime(2024, 10, 26, 16, 0),
-                num_sats="07",
-                hdop="1.1",
-                fix_time="039",
-                dimension="3",
-                activity="00",
-                temperature="+28",
-                mortality=True,
-                low_batt_voltage=False
-            )
-        ],
         "052194": [
             DataResponse(
                 ats_serial_num="052194",
@@ -202,7 +232,23 @@ def mock_ats_data_parsed(mock_ats_data_response_xml):
                 mortality=False,
                 low_batt_voltage=False
             )
-        ]
+        ],
+        "052191": [
+            DataResponse(
+                ats_serial_num="052191",
+                longitude=-68.26540,
+                latitude=5.44309,
+                date_year_and_julian=datetime.datetime(2024, 10, 26, 16, 0),
+                num_sats="07",
+                hdop="1.1",
+                fix_time="039",
+                dimension="3",
+                activity="00",
+                temperature="+28",
+                mortality=True,
+                low_batt_voltage=False
+            )
+        ],
     }
 
 
