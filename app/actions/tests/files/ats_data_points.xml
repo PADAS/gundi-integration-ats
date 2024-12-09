@@ -1,0 +1,76 @@
+<DataSet>
+    <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata"
+               id="NewDataSet">
+        <xs:element name="NewDataSet" msdata:IsDataSet="true" msdata:UseCurrentLocale="true">
+            <xs:complexType>
+                <xs:choice minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="Table">
+                        <xs:complexType>
+                            <xs:sequence>
+                                <xs:element name="AtsSerialNum" type="xs:string" minOccurs="0"/>
+                                <xs:element name="Latitude" type="xs:string" minOccurs="0"/>
+                                <xs:element name="Longitude" type="xs:string" minOccurs="0"/>
+                                <xs:element name="DateYearAndJulian" type="xs:string" minOccurs="0"/>
+                                <xs:element name="NumSats" type="xs:string" minOccurs="0"/>
+                                <xs:element name="Hdop" type="xs:string" minOccurs="0"/>
+                                <xs:element name="FixTime" type="xs:string" minOccurs="0"/>
+                                <xs:element name="Dimension" type="xs:string" minOccurs="0"/>
+                                <xs:element name="Activity" type="xs:string" minOccurs="0"/>
+                                <xs:element name="Temperature" type="xs:string" minOccurs="0"/>
+                                <xs:element name="Mortality" type="xs:boolean" minOccurs="0"/>
+                                <xs:element name="LowBattVoltage" type="xs:boolean" minOccurs="0"/>
+                            </xs:sequence>
+                        </xs:complexType>
+                    </xs:element>
+                </xs:choice>
+            </xs:complexType>
+        </xs:element>
+    </xs:schema>
+    <diffgr:diffgram xmlns:diffgr="urn:schemas-microsoft-com:xml-diffgram-v1"
+                     xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <NewDataSet>
+            <Table diffgr:id="Table1" msdata:rowOrder="0">
+                <AtsSerialNum>052194</AtsSerialNum>
+                <Latitude>+05.52827</Latitude>
+                <Longitude>-068.52625</Longitude>
+                <DateYearAndJulian>2024-05-31 00:00:00.000</DateYearAndJulian>
+                <NumSats>08</NumSats>
+                <Hdop>0.9</Hdop>
+                <FixTime>039</FixTime>
+                <Dimension>3</Dimension>
+                <Activity>02</Activity>
+                <Temperature>+24</Temperature>
+                <Mortality>false</Mortality>
+                <LowBattVoltage>false</LowBattVoltage>
+            </Table>
+            <Table diffgr:id="Table2" msdata:rowOrder="1">
+                <AtsSerialNum>052194</AtsSerialNum>
+                <Latitude>+05.52827</Latitude>
+                <Longitude>-068.52596</Longitude>
+                <DateYearAndJulian>2024-05-31 08:00:00.000</DateYearAndJulian>
+                <NumSats>10</NumSats>
+                <Hdop>0.8</Hdop>
+                <FixTime>039</FixTime>
+                <Dimension>3</Dimension>
+                <Activity>02</Activity>
+                <Temperature>+24</Temperature>
+                <Mortality>false</Mortality>
+                <LowBattVoltage>false</LowBattVoltage>
+            </Table>
+            <Table diffgr:id="Table3" msdata:rowOrder="2">
+                <AtsSerialNum>052191</AtsSerialNum>
+                <Latitude>+05.44309</Latitude>
+                <Longitude>-068.26540</Longitude>
+                <DateYearAndJulian>2024-10-26 16:00:00.000</DateYearAndJulian>
+                <NumSats>07</NumSats>
+                <Hdop>1.1</Hdop>
+                <FixTime>039</FixTime>
+                <Dimension>3</Dimension>
+                <Activity>00</Activity>
+                <Temperature>+28</Temperature>
+                <Mortality>true</Mortality>
+                <LowBattVoltage>false</LowBattVoltage>
+            </Table>
+        </NewDataSet>
+    </diffgr:diffgram>
+</DataSet>
