@@ -37,13 +37,11 @@ async def test_get_transmissions_endpoint_response(ats_integration_v2, mock_ats_
         assert response == mock_ats_transmissions_response_xml
 
 
-@pytest.mark.asyncio
 def test_parse_transmissions_from_xml(mock_ats_transmissions_response_xml, mock_ats_transmissions_parsed):
     result = parse_transmissions_from_xml(mock_ats_transmissions_response_xml)
     assert result == mock_ats_transmissions_parsed
 
 
-@pytest.mark.asyncio
 def test_parse_transmissions_from_xml_with_invalid_offset(
         mock_ats_transmissions_response_with_invalid_offsets, mock_ats_transmissions_with_invalid_offsets_parsed
 ):
@@ -76,13 +74,11 @@ async def test_get_data_endpoint_response(ats_integration_v2, mock_ats_data_resp
         assert response == mock_ats_data_response_xml
 
 
-@pytest.mark.asyncio
 def test_parse_data_points_from_xml(mock_ats_data_response_xml, mock_ats_data_parsed):
     result = parse_data_points_from_xml(mock_ats_data_response_xml)
     assert result == mock_ats_data_parsed
 
 
-@pytest.mark.asyncio
 def test_parse_data_points_raises_on_invalid_xml(mock_ats_data_response_with_invalid_xml):
     with pytest.raises(ATSBadXMLException):
         parse_data_points_from_xml(mock_ats_data_response_with_invalid_xml)
