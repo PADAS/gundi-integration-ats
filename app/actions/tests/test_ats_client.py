@@ -49,6 +49,11 @@ def test_parse_transmissions_from_xml_with_invalid_offset(
     assert result == mock_ats_transmissions_with_invalid_offsets_parsed  # Invalid offsets are accepted and fixed later
 
 
+def test_parse_transmissions_from_empty_xml(mock_ats_transmissions_response_empty_xml):
+    result = parse_data_points_from_xml(mock_ats_transmissions_response_empty_xml)
+    assert result == {}
+
+
 @pytest.mark.asyncio
 async def test_get_data_endpoint_response(ats_integration_v2, mock_ats_data_response_xml):
     # Mock httpx response for data endpoint
@@ -82,3 +87,8 @@ def test_parse_data_points_from_xml(mock_ats_data_response_xml, mock_ats_data_pa
 def test_parse_data_points_raises_on_invalid_xml(mock_ats_data_response_with_invalid_xml):
     with pytest.raises(ATSBadXMLException):
         parse_data_points_from_xml(mock_ats_data_response_with_invalid_xml)
+
+
+def test_parse_data_points_from_empty_xml(mock_ats_data_response_no_points_xml):
+    result = parse_data_points_from_xml(mock_ats_data_response_no_points_xml)
+    assert result == {}

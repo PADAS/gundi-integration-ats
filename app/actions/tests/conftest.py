@@ -127,6 +127,12 @@ def mock_ats_transmissions_response_with_invalid_offsets():
 
 
 @pytest.fixture
+def mock_ats_transmissions_response_empty_xml():
+    with open("app/actions/tests/files/ats_no_transmissions.xml") as f:
+        return f.read()
+
+
+@pytest.fixture
 def mock_ats_transmissions_parsed(mock_ats_transmissions_response_xml):
     return [
         TransmissionsResponse(
@@ -199,6 +205,12 @@ def mock_ats_data_response_xml():
 @pytest.fixture
 def mock_ats_data_response_with_invalid_xml():
     with open("app/actions/tests/files/ats_data_points_invalid_xml.xml") as f:
+        return f.read()
+
+
+@pytest.fixture
+def mock_ats_data_response_no_points_xml():
+    with open("app/actions/tests/files/ats_no_data_points.xml") as f:
         return f.read()
 
 
