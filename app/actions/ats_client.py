@@ -30,14 +30,6 @@ class DataResponse(pydantic.BaseModel):
     class Config:
         allow_population_by_field_name = True
 
-    """
-    @validator('DateYearAndJulian')
-    def parse_datetime(cls, v):
-        if not v.tzinfo:
-            return v.replace(tzinfo=timezone.utc)
-        return v
-    """
-
 
 class TransmissionsResponse(pydantic.BaseModel):
     date_sent: datetime = pydantic.Field(..., alias="DateSent")
@@ -55,35 +47,13 @@ class TransmissionsResponse(pydantic.BaseModel):
     class Config:
         allow_population_by_field_name = True
 
-    """
-    @validator('DateSent')
-    def parse_datetime(cls, v):
-        if not v.tzinfo:
-            return v.replace(tzinfo=timezone.utc)
-        return v
-    """
-
 
 class PullObservationsDataResponse(pydantic.BaseModel):
     vehicles: List[DataResponse]
 
-    @pydantic.validator("vehicles", pre=True)
-    def validate_vehicles(cls, val):
-        if isinstance(val, list):
-            return val
-        # val is not a valid list, return an empty list instead
-        return []
-
 
 class PullObservationsTransmissionsResponse(pydantic.BaseModel):
     transmissions: List[TransmissionsResponse]
-
-    @pydantic.validator("transmissions", pre=True)
-    def validate_transmissions(cls, val):
-        if isinstance(val, list):
-            return val
-        # val is not a valid list, return an empty list instead
-        return []
 
 
 class ATSBadXMLException(Exception):
