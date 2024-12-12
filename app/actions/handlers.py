@@ -23,11 +23,13 @@ file_storage = CloudFileStorage()
 
 
 PENDING_FILES = "ats_pending_files"
+IN_PROGRESS_FILES = "ats_in_progress_files"
 PROCESSED_FILES = "ats_processed_files"
 
 
 class FileStatus(Enum):
     PENDING = "pending"
+    IN_PROGRESS = "in_progress"
     PROCESSED = "processed"
 
 
@@ -181,6 +183,13 @@ async def action_pull_observations(integration, action_config: PullObservationsC
 
 async def process_data_file(file_name, integration, process_config):
     logger.info(f"Processing data file {file_name} for integration {integration}...")
+    # Set the file status as processed
+    await state_manager.group_move(
+        from_group=PENDING_FILES,
+        to_group=IN_PROGRESS_FILES,
+        values=[file_name]
+    )
+
     transmissions = {}
     data_points_per_device = {}
     observations_processed = 0
@@ -286,7 +295,7 @@ async def process_data_file(file_name, integration, process_config):
 
     # Set the file status as processed
     await state_manager.group_move(
-        from_group=PENDING_FILES,
+        from_group=IN_PROGRESS_FILES,
         to_group=PROCESSED_FILES,
         values=[file_name]
     )
