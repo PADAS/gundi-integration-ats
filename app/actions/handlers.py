@@ -183,7 +183,7 @@ async def action_pull_observations(integration, action_config: PullObservationsC
 
 async def process_data_file(file_name, integration, process_config):
     logger.info(f"Processing data file {file_name} for integration {integration}...")
-    # Set the file status as processed
+    # Set the file in progress for thread-safety
     await state_manager.group_move(
         from_group=PENDING_FILES,
         to_group=IN_PROGRESS_FILES,
