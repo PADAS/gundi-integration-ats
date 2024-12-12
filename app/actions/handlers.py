@@ -296,6 +296,11 @@ async def process_data_file(file_name, integration, process_config):
         blob_name=file_name,
         metadata={"status": FileStatus.PROCESSED.value}
     )
+    await file_storage.update_file_metadata(
+        integration_id=integration_id,
+        blob_name=transmissions_file_name,
+        metadata={"status": FileStatus.PROCESSED.value}
+    )
     logger.info(f"Data file {file_name} processed.")
     await file_storage.delete_file(integration_id=integration_id, blob_name=file_name)
     logger.info(f"Data file {file_name} deleted.")
