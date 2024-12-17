@@ -7,7 +7,6 @@ import stamina
 from datetime import datetime, timedelta
 from xml.parsers.expat import ExpatError
 from typing import List, Optional
-from enum import Enum
 
 
 logger = logging.getLogger(__name__)
