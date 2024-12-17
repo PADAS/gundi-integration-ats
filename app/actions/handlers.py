@@ -1,7 +1,5 @@
 import asyncio
 import datetime
-from enum import Enum
-
 import aiohttp
 import logging
 import aiofiles
@@ -12,8 +10,14 @@ import app.services.gundi as gundi_tools
 from app.services.activity_logger import activity_logger, log_action_activity
 from app.services.state import IntegrationStateManager
 from app.services.file_storage import CloudFileStorage
-from .configurations import PullObservationsConfig, ProcessObservationsConfig, get_auth_config, get_pull_config
-
+from .configurations import (
+    PullObservationsConfig,
+    ProcessObservationsConfig,
+    get_auth_config,
+    GetFileStatusConfig,
+    SetFileStatusConfig,
+    ReprocessFileConfig
+)
 
 logger = logging.getLogger(__name__)
 
@@ -25,12 +29,6 @@ file_storage = CloudFileStorage()
 PENDING_FILES = "ats_pending_files"
 IN_PROGRESS_FILES = "ats_in_progress_files"
 PROCESSED_FILES = "ats_processed_files"
-
-
-class FileStatus(Enum):
-    PENDING = "pending"
-    IN_PROGRESS = "in_progress"
-    PROCESSED = "processed"
 
 
 def extract_gmt_offsets(transmissions, integration_id):
@@ -112,7 +110,7 @@ async def retrieve_transmissions(integration_id, auth_config, pull_config, file_
         metadata={
             "integration_id": integration_id,
             "ats_username": auth_config.username,
-            "status": FileStatus.PENDING.value
+            "status": ats_client.FileStatus.PENDING.value
         }
     )
 
@@ -141,7 +139,7 @@ async def retrieve_data_points(integration_id, auth_config, pull_config, file_pr
         metadata={
             "integration_id": integration_id,
             "ats_username": auth_config.username,
-            "status": FileStatus.PENDING.value
+            "status": ats_client.FileStatus.PENDING.value
         }
     )
 
@@ -306,12 +304,12 @@ async def process_data_file(file_name, integration, process_config):
     await file_storage.update_file_metadata(
         integration_id=integration_id,
         blob_name=file_name,
-        metadata={"status": FileStatus.PROCESSED.value}
+        metadata={"status": ats_client.FileStatus.PROCESSED.value}
     )
     await file_storage.update_file_metadata(
         integration_id=integration_id,
         blob_name=transmissions_file_name,
-        metadata={"status": FileStatus.PROCESSED.value}
+        metadata={"status": ats_client.FileStatus.PROCESSED.value}
     )
     logger.info(f"Data file {file_name} processed.")
     await file_storage.delete_file(integration_id=integration_id, blob_name=file_name)
@@ -349,3 +347,43 @@ async def action_process_observations(integration, action_config: ProcessObserva
             continue  # Keep processing as many files as possible
     logger.info(f"-- Observations processed with success for integration '{integration_id}'.")
     return {'observations_processed': observations_processed}
+
+
+async def action_get_file_status(integration, action_config: GetFileStatusConfig):
+    logger.info(f"Executing get_file_status action with integration {integration} and action_config {action_config}...")
+    integration_id = str(integration.id)
+    file_name = action_config.filename
+    file_metadata = await file_storage.get_file_metadata(
+        integration_id=integration_id,
+        blob_name=file_name
+    )
+    file_status = file_metadata.get("status", None)
+    logger.info(f"-- File status for '{file_name}' in integration '{integration_id}': {file_status} --")
+    return {"file_status": file_status}
+
+
+async def action_set_file_status(integration, action_config: SetFileStatusConfig):
+    logger.info(f"Executing set_file_status action with integration {integration} and action_config {action_config}...")
+    integration_id = str(integration.id)
+    file_name = action_config.filename
+    file_status = action_config.status
+    await file_storage.update_file_metadata(
+        integration_id=integration_id,
+        blob_name=file_name,
+        metadata={"status": file_status}
+    )
+    logger.info(f"-- File status for '{file_name}' in integration '{integration_id}' set to '{file_status}' --")
+    return {"file_status": file_status}
+
+
+async def action_reprocess_file(integration, action_config: ReprocessFileConfig):
+    logger.info(f"Executing reprocess_file action with integration {integration} and action_config {action_config}...")
+    integration_id = str(integration.id)
+    file_name = action_config.filename
+    observations_processed = await process_data_file(
+        file_name=file_name,
+        integration=integration,
+        process_config=action_config
+    )
+    logger.info(f"-- File '{file_name}' reprocessed with success for integration '{integration_id}'.")
+    return {"observations_processed": observations_processed}
