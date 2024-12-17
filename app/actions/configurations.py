@@ -1,8 +1,15 @@
-from .core import AuthActionConfiguration, PullActionConfiguration, ExecutableActionMixin
+from .core import AuthActionConfiguration, PullActionConfiguration, ExecutableActionMixin, GenericActionConfiguration
 import pydantic
 
+from enum import Enum
 from ..services.errors import ConfigurationNotFound
 from ..services.utils import find_config_for_action
+
+
+class FileStatus(Enum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    PROCESSED = "processed"
 
 
 class AuthenticateConfig(AuthActionConfiguration, ExecutableActionMixin):
@@ -16,6 +23,28 @@ class PullObservationsConfig(PullActionConfiguration):
 
 
 class ProcessObservationsConfig(PullActionConfiguration):
+    pass
+
+
+class FileModel(pydantic.BaseModel):
+    filename: str
+
+    @pydantic.validator('filename')
+    def validate_filename_extension(cls, value):
+        if not value.lower().endswith('.xml'):
+            raise ValueError('Filename must have an .xml extension')
+        return value
+
+
+class GetFileStatusConfig(FileModel, GenericActionConfiguration, ExecutableActionMixin):
+    pass
+
+
+class SetFileStatusConfig(FileModel, GenericActionConfiguration, ExecutableActionMixin):
+    status: FileStatus = FileStatus.PENDING
+
+
+class ReprocessFileConfig(FileModel, GenericActionConfiguration, ExecutableActionMixin):
     pass
 
 
