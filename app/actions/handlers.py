@@ -70,7 +70,7 @@ async def get_file_status(file_name):
             if is_a_processed_file:
                 return {"status": FileStatus.PROCESSED.value, "group": PROCESSED_FILES}
             else:
-                return None
+                return {}
 
 
 async def filter_and_transform(serial_num, vehicles, gmt_offset, integration_id, action_id):
@@ -383,7 +383,7 @@ async def action_get_file_status(integration, action_config: GetFileStatusConfig
     file_name = action_config.filename
     file_status = await get_file_status(file_name)
 
-    return {"file_status": file_status.get("status", None)}
+    return {"file_status": file_status.get("status", "Not found")}
 
 
 async def action_set_file_status(integration, action_config: SetFileStatusConfig):
@@ -391,12 +391,16 @@ async def action_set_file_status(integration, action_config: SetFileStatusConfig
     integration_id = str(integration.id)
     file_name = action_config.filename
     file_status_to_move = action_config.status
-
-    current_file_status = await get_file_status(file_name)
     group_to_move = get_file_group_by_status(file_status_to_move)
 
+    current_file_status = await get_file_status(file_name)
+
+    if not current_file_status:
+        logger.warning(f"File '{file_name}' not found in any group. Skipping status change.")
+        return {"file_status": "Not found"}
+
     await state_manager.group_move(
-        from_group=current_file_status.get("group"),
+        from_group=current_file_status.get("group", None),
         to_group=group_to_move,
         values=[file_name]
     )

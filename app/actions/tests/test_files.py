@@ -1,6 +1,14 @@
+import asyncio
 import pytest
 from unittest.mock import AsyncMock
-from app.actions.handlers import action_get_file_status, action_set_file_status, action_reprocess_file, PENDING_FILES
+from app.actions.handlers import (
+    action_get_file_status,
+    action_set_file_status,
+    action_reprocess_file,
+    PENDING_FILES,
+    IN_PROGRESS_FILES,
+    PROCESSED_FILES
+)
 from app.actions.configurations import FileStatus, GetFileStatusConfig, SetFileStatusConfig, ReprocessFileConfig
 
 @pytest.mark.asyncio
@@ -12,6 +20,25 @@ async def test_action_get_file_status(mocker, integration_v2, mock_state_manager
 
     mock_state_manager.group_ismember.assert_any_call(PENDING_FILES, "test_file.xml")
     assert result == {"file_status": FileStatus.PENDING.value}
+
+
+@pytest.mark.asyncio
+async def test_action_get_file_status_not_found(mocker, integration_v2, mock_state_manager):
+    mocker.patch("app.actions.handlers.state_manager", mock_state_manager)
+
+    future = asyncio.Future()
+    future.set_result(False)
+    mock_state_manager.group_ismember.return_value = future
+
+    action_config = GetFileStatusConfig(filename="non_existent_file.xml")
+
+    result = await action_get_file_status(integration_v2, action_config)
+
+    mock_state_manager.group_ismember.assert_any_call(PENDING_FILES, "non_existent_file.xml")
+    mock_state_manager.group_ismember.assert_any_call(IN_PROGRESS_FILES, "non_existent_file.xml")
+    mock_state_manager.group_ismember.assert_any_call(PROCESSED_FILES, "non_existent_file.xml")
+    assert result == {"file_status": "Not found"}
+
 
 @pytest.mark.asyncio
 async def test_action_set_file_status(mocker, integration_v2, mock_state_manager, mock_file_storage):
@@ -27,6 +54,26 @@ async def test_action_set_file_status(mocker, integration_v2, mock_state_manager
         values=[action_config.filename]
     )
     assert result == {"file_status": action_config.status.value}
+
+
+@pytest.mark.asyncio
+async def test_action_set_file_status_not_found(mocker, integration_v2, mock_state_manager, mock_file_storage):
+    mocker.patch("app.actions.handlers.state_manager", mock_state_manager)
+
+    future = asyncio.Future()
+    future.set_result(False)
+    mock_state_manager.group_ismember.return_value = future
+
+    mocker.patch("app.actions.handlers.file_storage", mock_file_storage)
+    action_config = SetFileStatusConfig(filename="non_existent_file.xml", status=FileStatus.IN_PROGRESS)
+
+    result = await action_set_file_status(integration_v2, action_config)
+
+    mock_state_manager.group_ismember.assert_any_call(PENDING_FILES, "non_existent_file.xml")
+    mock_state_manager.group_ismember.assert_any_call(IN_PROGRESS_FILES, "non_existent_file.xml")
+    mock_state_manager.group_ismember.assert_any_call(PROCESSED_FILES, "non_existent_file.xml")
+    assert result == {"file_status": "Not found"}
+
 
 @pytest.mark.asyncio
 async def test_action_reprocess_file(mocker, integration_v2, mock_file_storage, mock_state_manager):
