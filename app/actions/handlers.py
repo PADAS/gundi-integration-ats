@@ -58,19 +58,13 @@ def get_file_group_by_status(status):
 
 
 async def get_file_status(file_name):
-    is_a_pending_file = await state_manager.group_ismember(PENDING_FILES, file_name)
-    if is_a_pending_file:
+    if await state_manager.group_ismember(PENDING_FILES, file_name):
         return {"status": FileStatus.PENDING.value, "group": PENDING_FILES}
-    else:
-        is_an_in_progress_file = await state_manager.group_ismember(IN_PROGRESS_FILES, file_name)
-        if is_an_in_progress_file:
-            return {"status": FileStatus.IN_PROGRESS.value, "group": IN_PROGRESS_FILES}
-        else:
-            is_a_processed_file = await state_manager.group_ismember(PROCESSED_FILES, file_name)
-            if is_a_processed_file:
-                return {"status": FileStatus.PROCESSED.value, "group": PROCESSED_FILES}
-            else:
-                return {}
+    elif await state_manager.group_ismember(IN_PROGRESS_FILES, file_name):
+        return {"status": FileStatus.IN_PROGRESS.value, "group": IN_PROGRESS_FILES}
+    elif await state_manager.group_ismember(PROCESSED_FILES, file_name):
+        return {"status": FileStatus.PROCESSED.value, "group": PROCESSED_FILES}
+    return {}
 
 
 async def filter_and_transform(serial_num, vehicles, gmt_offset, integration_id, action_id):
