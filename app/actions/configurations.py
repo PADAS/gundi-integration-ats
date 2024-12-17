@@ -1,9 +1,15 @@
 from .core import AuthActionConfiguration, PullActionConfiguration, ExecutableActionMixin, GenericActionConfiguration
 import pydantic
 
-from ..actions.ats_client import FileStatus
+from enum import Enum
 from ..services.errors import ConfigurationNotFound
 from ..services.utils import find_config_for_action
+
+
+class FileStatus(Enum):
+    PENDING = "pending"
+    IN_PROGRESS = "in_progress"
+    PROCESSED = "processed"
 
 
 class AuthenticateConfig(AuthActionConfiguration, ExecutableActionMixin):

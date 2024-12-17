@@ -1,35 +1,32 @@
 import pytest
-from unittest.mock import AsyncMock, patch
-from app.actions.handlers import action_get_file_status, action_set_file_status, action_reprocess_file
-from app.actions.ats_client import  FileStatus
-from app.actions.configurations import GetFileStatusConfig, SetFileStatusConfig, ReprocessFileConfig
+from unittest.mock import AsyncMock
+from app.actions.handlers import action_get_file_status, action_set_file_status, action_reprocess_file, PENDING_FILES
+from app.actions.configurations import FileStatus, GetFileStatusConfig, SetFileStatusConfig, ReprocessFileConfig
 
 @pytest.mark.asyncio
-async def test_action_get_file_status(mocker, integration_v2, mock_file_storage):
-    mocker.patch("app.actions.handlers.file_storage", mock_file_storage)
+async def test_action_get_file_status(mocker, integration_v2, mock_state_manager):
+    mocker.patch("app.actions.handlers.state_manager", mock_state_manager)
     action_config = GetFileStatusConfig(filename="test_file.xml")
 
     result = await action_get_file_status(integration_v2, action_config)
 
-    mock_file_storage.get_file_metadata.assert_any_call(
-        integration_id=str(integration_v2.id),
-        blob_name="test_file.xml"
-    )
-    assert result == {"file_status": "pending"}
+    mock_state_manager.group_ismember.assert_any_call(PENDING_FILES, "test_file.xml")
+    assert result == {"file_status": FileStatus.PENDING.value}
 
 @pytest.mark.asyncio
-async def test_action_set_file_status(mocker, integration_v2, mock_file_storage):
+async def test_action_set_file_status(mocker, integration_v2, mock_state_manager, mock_file_storage):
+    mocker.patch("app.actions.handlers.state_manager", mock_state_manager)
     mocker.patch("app.actions.handlers.file_storage", mock_file_storage)
-    action_config = SetFileStatusConfig(filename="test_file.xml", status=FileStatus.PROCESSED)
+    action_config = SetFileStatusConfig(filename="test_file.xml", status=FileStatus.IN_PROGRESS)
 
     result = await action_set_file_status(integration_v2, action_config)
 
-    mock_file_storage.update_file_metadata.assert_any_call(
-        integration_id=str(integration_v2.id),
-        blob_name="test_file.xml",
-        metadata={"status": FileStatus.PROCESSED}
+    mock_state_manager.group_move.assert_any_call(
+        from_group="ats_pending_files",
+        to_group="ats_in_progress_files",
+        values=[action_config.filename]
     )
-    assert result == {"file_status": FileStatus.PROCESSED}
+    assert result == {"file_status": action_config.status.value}
 
 @pytest.mark.asyncio
 async def test_action_reprocess_file(mocker, integration_v2, mock_file_storage, mock_state_manager):

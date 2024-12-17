@@ -14,12 +14,6 @@ logger = logging.getLogger(__name__)
 
 
 # Pydantic models
-class FileStatus(Enum):
-    PENDING = "pending"
-    IN_PROGRESS = "in_progress"
-    PROCESSED = "processed"
-
-
 class DataResponse(pydantic.BaseModel):
     ats_serial_num: str = pydantic.Field(..., alias="AtsSerialNum")
     longitude: float = pydantic.Field(None, alias='Longitude', ge=-180.0, le=360.0)

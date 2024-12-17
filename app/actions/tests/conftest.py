@@ -94,6 +94,7 @@ def mock_state_manager(mocker, mock_transmissions_file_name, mock_data_file_name
         mock_transmissions_file_name,
         mock_data_file_name,
     ])
+    mock_state_manager.group_ismember.return_value = async_return(True)
     mock_state_manager.group_move.return_value = async_return(1)
     mock_state_manager.group_remove.return_value = async_return(1)
     return mock_state_manager
