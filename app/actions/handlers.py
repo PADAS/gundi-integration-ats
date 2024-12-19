@@ -203,6 +203,20 @@ async def action_pull_observations(integration, action_config: PullObservationsC
 
 async def process_data_file(file_name, integration, process_config):
     logger.info(f"Processing data file {file_name} for integration {integration}...")
+
+    # Check current file status
+    file_status = await get_file_status(file_name)
+
+    if not file_status:
+        logger.warning(f"File {file_name} not found. Skipping processing.")
+        return 0
+    if file_status.get("status") == FileStatus.IN_PROGRESS.value:
+        logger.warning(f"File {file_name} is already in progress. Skipping processing.")
+        return 0
+    if file_status.get("status") == FileStatus.PROCESSED.value:
+        logger.warning(f"File {file_name} had been processed. Skipping processing.")
+        return 0
+
     # Set the file in progress for thread-safety
     moved = await state_manager.group_move(
         from_group=PENDING_FILES,
@@ -411,6 +425,23 @@ async def action_reprocess_file(integration, action_config: ReprocessFileConfig)
     logger.info(f"Executing reprocess_file action with integration {integration} and action_config {action_config}...")
     integration_id = str(integration.id)
     file_name = action_config.filename
+
+    # check current file status
+    file_status = await get_file_status(file_name)
+
+    if not file_status:
+        msg = f"File '{file_name}' not found. Skipping reprocessing."
+        logger.warning(msg)
+        return {"observations_processed": 0, "message": msg}
+    if file_status.get("status") == FileStatus.IN_PROGRESS.value:
+        msg = f"File '{file_name}' processing is already in progress. Skipping reprocessing."
+        logger.warning(msg)
+        return {"observations_processed": 0, "message": msg}
+    if file_status.get("status") == FileStatus.PROCESSED.value:
+        msg = f"File '{file_name}' was already processed and deleted. Please contact Gundi team to restore it."
+        logger.warning(msg)
+        return {"observations_processed": 0, "message": msg}
+
     observations_processed = await process_data_file(
         file_name=file_name,
         integration=integration,
