@@ -53,7 +53,7 @@ async def test_action_set_file_status(mocker, integration_v2, mock_state_manager
         to_group="ats_in_progress_files",
         values=[action_config.filename]
     )
-    assert result == {"file_status": action_config.status.value, 'message': f"File '{action_config.filename}' status set to '{action_config.status.value}'."}
+    assert result == {"file_status": action_config.status.value, 'message': f"File status for '{action_config.filename}' in integration '{str(integration_v2.id)}' set to '{action_config.status.value}'."}
 
 
 @pytest.mark.asyncio

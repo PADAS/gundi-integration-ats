@@ -414,7 +414,7 @@ async def action_set_file_status(integration, action_config: SetFileStatusConfig
         blob_name=file_name,
         metadata={"status": file_status_to_move.value}
     )
-    msg = f"-- File status for '{file_name}' in integration '{integration_id}' set to '{file_status_to_move.value}' --"
+    msg = f"File status for '{file_name}' in integration '{integration_id}' set to '{file_status_to_move.value}'."
     logger.info(msg)
     return {"file_status": file_status_to_move.value, "message": msg}
 
