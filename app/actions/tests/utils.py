@@ -34,5 +34,8 @@ class InMemoryIntegrationStateManager:
         self.groups[group_name].difference_update(values)
         return len(values)
 
+    async def group_ismember(self, group_name: str, value: str) -> bool:
+        return value in self.groups.get(group_name, set())
+
     def __str__(self):
         return f"{self.__class__.__name__}({self.kvs}, {self.groups})"
