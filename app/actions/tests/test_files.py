@@ -53,11 +53,11 @@ async def test_action_set_file_status(mocker, integration_v2, mock_state_manager
         to_group="ats_in_progress_files",
         values=[action_config.filename]
     )
-    assert result == {"file_status": action_config.status.value}
+    assert result == {"file_status": action_config.status.value, 'message': f"File '{action_config.filename}' status set to '{action_config.status.value}'."}
 
 
 @pytest.mark.asyncio
-async def test_action_set_file_status_not_found(mocker, integration_v2, mock_state_manager, mock_file_storage):
+async def test_action_set_file_status_not_found_set_file_to_pending(mocker, integration_v2, mock_state_manager, mock_file_storage):
     mocker.patch("app.actions.handlers.state_manager", mock_state_manager)
 
     future = asyncio.Future()
@@ -72,7 +72,16 @@ async def test_action_set_file_status_not_found(mocker, integration_v2, mock_sta
     mock_state_manager.group_ismember.assert_any_call(PENDING_FILES, "non_existent_file.xml")
     mock_state_manager.group_ismember.assert_any_call(IN_PROGRESS_FILES, "non_existent_file.xml")
     mock_state_manager.group_ismember.assert_any_call(PROCESSED_FILES, "non_existent_file.xml")
-    assert result == {"file_status": "Not found"}
+    mock_state_manager.group_add.assert_called_once_with(
+        group_name=PENDING_FILES,
+        values=[action_config.filename]
+    )
+    mock_file_storage.update_file_metadata.assert_called_once_with(
+        integration_id=str(integration_v2.id),
+        blob_name=action_config.filename,
+        metadata={"status": FileStatus.PENDING.value}
+    )
+    assert result == {"file_status": "Not found", 'message': f"File '{action_config.filename}' not found in any group. Moving file to PENDING status."}
 
 
 @pytest.mark.asyncio
