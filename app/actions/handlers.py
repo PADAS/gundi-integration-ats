@@ -19,6 +19,7 @@ from .configurations import (
     SetFileStatusConfig,
     ReprocessFileConfig
 )
+from ..services.utils import crontab_schedule
 
 logger = logging.getLogger(__name__)
 
@@ -174,6 +175,7 @@ async def retrieve_data_points(integration_id, auth_config, pull_config, file_pr
     return data_points_file_name
 
 
+@crontab_schedule("*/10 * * * *")  # Run every 10 minutes
 @activity_logger()
 async def action_pull_observations(integration, action_config: PullObservationsConfig):
     logger.info(
@@ -341,6 +343,7 @@ async def process_data_file(file_name, integration, process_config):
     return observations_processed
 
 
+@crontab_schedule("5-55/10 * * * *")  # Run every 10 minutes, but 5 minutes after action_pull_observations
 @activity_logger()
 async def action_process_observations(integration, action_config: ProcessObservationsConfig):
     logger.info(f"Executing process_observations action with integration {integration} and action_config {action_config}...")
