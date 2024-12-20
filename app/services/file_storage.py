@@ -9,7 +9,13 @@ class CloudFileStorage:
     def __init__(self, bucket_name=None, root_prefix=None):
         self.root_prefix = root_prefix or settings.GCP_BUCKET_ROOT_PREFIX
         self.bucket_name = bucket_name or settings.GCP_BUCKET_NAME
-        self.storage_client = Storage()
+        self._storage_client = None  # Lazy initialization
+
+    @property
+    def storage_client(self):
+        if self._storage_client is None:
+            self._storage_client = Storage()
+        return self._storage_client
 
     def get_file_fullname(self, integration_id, blob_name):
         return f"{self.root_prefix}/{integration_id}/{blob_name}"
