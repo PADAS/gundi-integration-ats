@@ -85,6 +85,19 @@ async def test_action_set_file_status_not_found_set_file_to_pending(mocker, inte
 
 
 @pytest.mark.asyncio
+async def test_action_set_file_status_exception(mocker, integration_v2, mock_state_manager, mock_file_storage):
+    mocker.patch("app.actions.handlers.state_manager", mock_state_manager)
+    mocker.patch("app.actions.handlers.file_storage", mock_file_storage)
+    mock_state_manager.group_move.side_effect = Exception("Test exception")
+
+    action_config = SetFileStatusConfig(filename="test_file.xml", status=FileStatus.IN_PROGRESS)
+
+    result = await action_set_file_status(integration_v2, action_config)
+
+    assert result == {"file_status": FileStatus.PENDING.value, "message": "Error setting file status"}
+
+
+@pytest.mark.asyncio
 async def test_action_reprocess_file(mocker, integration_v2, mock_file_storage, mock_state_manager):
     mocker.patch("app.actions.handlers.file_storage", mock_file_storage)
     mocker.patch("app.actions.handlers.state_manager", mock_state_manager)
@@ -99,3 +112,18 @@ async def test_action_reprocess_file(mocker, integration_v2, mock_file_storage, 
         process_config=action_config
     )
     assert result == {"observations_processed": 10}
+
+
+@pytest.mark.asyncio
+async def test_action_reprocess_file_exception(mocker, integration_v2, mock_state_manager, mock_file_storage):
+    mocker.patch("app.actions.handlers.state_manager", mock_state_manager)
+    mocker.patch("app.actions.handlers.file_storage", mock_file_storage)
+    mock_state_manager.group_ismember.return_value = asyncio.Future()
+    mock_state_manager.group_ismember.return_value.set_result(True)
+    mock_state_manager.group_move.side_effect = Exception("Test exception")
+
+    action_config = ReprocessFileConfig(filename="test_file.xml")
+
+    result = await action_reprocess_file(integration_v2, action_config)
+
+    assert result == {"observations_processed": 0, "message": "Reprocess for file 'test_file.xml' failed. Error: Test exception."}

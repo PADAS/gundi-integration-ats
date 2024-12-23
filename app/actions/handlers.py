@@ -407,16 +407,28 @@ async def action_set_file_status(integration, action_config: SetFileStatusConfig
         logger.warning(msg)
         return {"file_status": "Not found", "message": msg}
 
-    await state_manager.group_move(
-        from_group=current_file_status.get("group", None),
-        to_group=group_to_move,
-        values=[file_name]
-    )
-    await file_storage.update_file_metadata(
-        integration_id=integration_id,
-        blob_name=file_name,
-        metadata={"status": file_status_to_move.value}
-    )
+    try:
+        await state_manager.group_move(
+            from_group=current_file_status.get("group", None),
+            to_group=group_to_move,
+            values=[file_name]
+        )
+    except Exception as e:
+        msg = f"state_manager.group_move for file '{file_name}' failed. Error: {e}."
+        logger.warning(msg)
+        return {"file_status": current_file_status.get("status"), "message": "Error setting file status"}
+
+    try:
+        await file_storage.update_file_metadata(
+            integration_id=integration_id,
+            blob_name=file_name,
+            metadata={"status": file_status_to_move.value}
+        )
+    except Exception as e:
+        msg = f"file_storage.update_file_metadata for file '{file_name}' status failed. Error: {e}."
+        logger.warning(msg)
+        return {"file_status": current_file_status.get("status"), "message": "Error setting file status"}
+
     msg = f"File status for '{file_name}' in integration '{integration_id}' set to '{file_status_to_move.value}'."
     logger.info(msg)
     return {"file_status": file_status_to_move.value, "message": msg}
@@ -443,10 +455,16 @@ async def action_reprocess_file(integration, action_config: ReprocessFileConfig)
         logger.warning(msg)
         return {"observations_processed": 0, "message": msg}
 
-    observations_processed = await process_data_file(
-        file_name=file_name,
-        integration=integration,
-        process_config=action_config
-    )
+    try:
+        observations_processed = await process_data_file(
+            file_name=file_name,
+            integration=integration,
+            process_config=action_config
+        )
+    except Exception as e:
+        msg = f"Reprocess for file '{file_name}' failed. Error: {e}."
+        logger.warning(msg)
+        return {"observations_processed": 0, "message": msg}
+
     logger.info(f"-- File '{file_name}' reprocessed with success for integration '{integration_id}'.")
     return {"observations_processed": observations_processed}
