@@ -97,7 +97,7 @@ def parse_data_points_from_xml(xml):
 
     if data:
         # Add a validator for checking if "Table" variable within data is a list, if not, convert it to a list
-        if not isinstance(data.get("Table", None), list):
+        if not isinstance(data.get("Table"), list):
             data["Table"] = [data.get("Table", {})]
 
         try:
