@@ -1,0 +1,50 @@
+<DataSet>
+    <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata"
+               id="NewDataSet">
+        <xs:element name="NewDataSet" msdata:IsDataSet="true" msdata:UseCurrentLocale="true">
+            <xs:complexType>
+                <xs:choice minOccurs="0" maxOccurs="unbounded">
+                    <xs:element name="Table">
+                        <xs:complexType>
+                            <xs:sequence>
+                                <xs:element name="DateSent" type="xs:dateTime" minOccurs="0"/>
+                                <xs:element name="CollarSerialNum" type="xs:string" minOccurs="0"/>
+                                <xs:element name="NumberFixes" type="xs:int" minOccurs="0"/>
+                                <xs:element name="BattVoltage" type="xs:string" minOccurs="0"/>
+                                <xs:element name="Mortality" type="xs:string" minOccurs="0"/>
+                                <xs:element name="BreakOff" type="xs:string" minOccurs="0"/>
+                                <xs:element name="SatErrors" type="xs:short" minOccurs="0"/>
+                                <xs:element name="YearBase" type="xs:short" minOccurs="0"/>
+                                <xs:element name="DayBase" type="xs:short" minOccurs="0"/>
+                                <xs:element name="GmtOffset" type="xs:short" minOccurs="0"/>
+                                <xs:element name="Event" type="xs:string" minOccurs="0"/>
+                                <xs:element name="evCondition" type="xs:string" minOccurs="0"/>
+                                <xs:element name="LowBattVoltage" type="xs:boolean" minOccurs="0"/>
+                            </xs:sequence>
+                        </xs:complexType>
+                    </xs:element>
+                </xs:choice>
+            </xs:complexType>
+        </xs:element>
+    </xs:schema>
+    <diffgr:diffgram xmlns:diffgr="urn:schemas-microsoft-com:xml-diffgram-v1"
+                     xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <NewDataSet>
+            <Table diffgr:id="Table1" msdata:rowOrder="0">
+                <DateSent>2024-10-26T23:12:10.74+00:00</DateSent>
+                <CollarSerialNum>052191</CollarSerialNum>
+                <NumberFixes>21</NumberFixes>
+                <BattVoltage>7.056</BattVoltage>
+                <Mortality>THIS COLLAR IS IN MORTALITY !!</Mortality>
+                <BreakOff>No</BreakOff>
+                <SatErrors>0</SatErrors>
+                <YearBase>24</YearBase>
+                <DayBase>294</DayBase>
+                <GmtOffset>0</GmtOffset>
+                <Event>None,None,None</Event>
+                <evCondition>None,None,None</evCondition>
+                <LowBattVoltage>false</LowBattVoltage>
+            </Table>
+        </NewDataSet>
+    </diffgr:diffgram>
+</DataSet>

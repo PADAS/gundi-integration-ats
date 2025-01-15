@@ -96,6 +96,10 @@ def parse_data_points_from_xml(xml):
         raise ATSBadXMLException(message=msg, error=e)
 
     if data:
+        # Add a validator for checking if "Table" variable within data is a list, if not, convert it to a list
+        if not isinstance(data.get("Table"), list):
+            data["Table"] = [data.get("Table", {})]
+
         try:
             parsed_response = PullObservationsDataResponse.parse_obj(
                 {"vehicles": data.get("Table", [])}
@@ -151,6 +155,10 @@ def parse_transmissions_from_xml(xml):
         raise ATSBadXMLException(message=msg, error=e)
 
     if transmissions:
+        # Add a validator for checking if "Table" variable within transmissions is a list, if not, convert it to a list
+        if not isinstance(transmissions.get("Table"), list):
+            transmissions["Table"] = [transmissions.get("Table", {})]
+
         try:
             parsed_response = PullObservationsTransmissionsResponse.parse_obj(
                 {"transmissions": transmissions.get("Table", [])}
