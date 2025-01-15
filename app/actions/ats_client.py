@@ -98,7 +98,7 @@ def parse_data_points_from_xml(xml):
     if data:
         # Add a validator for checking if "Table" variable within data is a list, if not, convert it to a list
         if not isinstance(data.get("Table", None), list):
-            data["Table"] = [data.get("Table", [])]
+            data["Table"] = [data.get("Table", {})]
 
         try:
             parsed_response = PullObservationsDataResponse.parse_obj(
@@ -157,7 +157,7 @@ def parse_transmissions_from_xml(xml):
     if transmissions:
         # Add a validator for checking if "Table" variable within transmissions is a list, if not, convert it to a list
         if not isinstance(transmissions.get("Table", None), list):
-            transmissions["Table"] = [transmissions.get("Table", [])]
+            transmissions["Table"] = [transmissions.get("Table", {})]
 
         try:
             parsed_response = PullObservationsTransmissionsResponse.parse_obj(
