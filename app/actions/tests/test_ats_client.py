@@ -1,6 +1,7 @@
 import httpx
 import pytest
 import respx
+import xmltodict
 
 from ..ats_client import (
     get_transmissions_endpoint_response,
@@ -54,6 +55,24 @@ def test_parse_transmissions_from_empty_xml(mock_ats_transmissions_response_empt
     assert result == {}
 
 
+def test_parse_transmissions_from_xml_with_single_point(
+        mock_ats_transmissions_response_single_point_xml,
+        mock_ats_transmissions_with_single_point_parsed
+):
+    # First validate the original XML parse a single point as dict
+    parsed_xml = xmltodict.parse(mock_ats_transmissions_response_single_point_xml)
+    data_xml_tag = parsed_xml["DataSet"].get("diffgr:diffgram", {})
+    data = data_xml_tag.get("NewDataSet", {})
+
+    assert isinstance(data.get("Table", None), dict)
+
+    # Then validate after calling parsing method, the single point is converted to a list and is parsed correctly
+    result = parse_transmissions_from_xml(mock_ats_transmissions_response_single_point_xml)
+    assert isinstance(result, list)
+    assert len(result) == 1  # Ensure the single item was converted to a list
+    assert result == mock_ats_transmissions_with_single_point_parsed
+
+
 @pytest.mark.asyncio
 async def test_get_data_endpoint_response(ats_integration_v2, mock_ats_data_response_xml):
     # Mock httpx response for data endpoint
@@ -92,3 +111,21 @@ def test_parse_data_points_raises_on_invalid_xml(mock_ats_data_response_with_inv
 def test_parse_data_points_from_empty_xml(mock_ats_data_response_no_points_xml):
     result = parse_data_points_from_xml(mock_ats_data_response_no_points_xml)
     assert result == {}
+
+
+def test_parse_data_points_from_xml_with_single_point(
+        mock_ats_data_response_single_point_xml,
+        mock_ats_data_single_point_parsed
+):
+    # First validate the original XML parse a single point as dict
+    parsed_xml = xmltodict.parse(mock_ats_data_response_single_point_xml)
+    data_xml_tag = parsed_xml["DataSet"].get("diffgr:diffgram", {})
+    data = data_xml_tag.get("NewDataSet", {})
+
+    assert isinstance(data.get("Table", None), dict)
+
+    # Then validate after calling parsing method, the single point is converted to a list and is parsed correctly
+    result = parse_data_points_from_xml(mock_ats_data_response_single_point_xml)
+    assert isinstance(result["052194"], list)
+    assert len(result["052194"]) == 1  # Ensure the single item was converted to a list
+    assert result == mock_ats_data_single_point_parsed

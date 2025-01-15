@@ -134,6 +134,12 @@ def mock_ats_transmissions_response_empty_xml():
 
 
 @pytest.fixture
+def mock_ats_transmissions_response_single_point_xml():
+    with open("app/actions/tests/files/ats_transmissions_single_point.xml") as f:
+        return f.read()
+
+
+@pytest.fixture
 def mock_ats_transmissions_parsed(mock_ats_transmissions_response_xml):
     return [
         TransmissionsResponse(
@@ -198,6 +204,25 @@ def mock_ats_transmissions_with_invalid_offsets_parsed(mock_ats_transmissions_re
 
 
 @pytest.fixture
+def mock_ats_transmissions_with_single_point_parsed(mock_ats_transmissions_response_xml):
+    return [
+        TransmissionsResponse(
+            date_sent=datetime.datetime(2024, 10, 26, 23, 12, 10, 740000, tzinfo=datetime.timezone.utc),
+            collar_serial_num="052191",
+            number_fixes=21,
+            batt_voltage=7.056,
+            mortality="THIS COLLAR IS IN MORTALITY !!",
+            break_off="No",
+            sat_errors="0",
+            year_base="24",
+            day_base="294",
+            gmt_offset=0,
+            low_batt_voltage=False
+        ),
+    ]
+
+
+@pytest.fixture
 def mock_ats_data_response_xml():
     with open("app/actions/tests/files/ats_data_points.xml") as f:
         return f.read()
@@ -212,6 +237,12 @@ def mock_ats_data_response_with_invalid_xml():
 @pytest.fixture
 def mock_ats_data_response_no_points_xml():
     with open("app/actions/tests/files/ats_no_data_points.xml") as f:
+        return f.read()
+
+
+@pytest.fixture
+def mock_ats_data_response_single_point_xml():
+    with open("app/actions/tests/files/ats_data_points_single_point.xml") as f:
         return f.read()
 
 
@@ -264,6 +295,28 @@ def mock_ats_data_parsed(mock_ats_data_response_xml):
                 low_batt_voltage=False
             )
         ],
+    }
+
+
+@pytest.fixture
+def mock_ats_data_single_point_parsed(mock_ats_data_response_xml):
+    return {
+        "052194": [
+            DataResponse(
+                ats_serial_num="052194",
+                longitude=-68.52625,
+                latitude=5.52827,
+                date_year_and_julian=datetime.datetime(2024, 5, 31, 0, 0),
+                num_sats="08",
+                hdop="0.9",
+                fix_time="039",
+                dimension="3",
+                activity="02",
+                temperature="+24",
+                mortality=False,
+                low_batt_voltage=False
+            )
+        ]
     }
 
 
