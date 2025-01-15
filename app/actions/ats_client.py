@@ -156,7 +156,7 @@ def parse_transmissions_from_xml(xml):
 
     if transmissions:
         # Add a validator for checking if "Table" variable within transmissions is a list, if not, convert it to a list
-        if not isinstance(transmissions.get("Table", None), list):
+        if not isinstance(transmissions.get("Table"), list):
             transmissions["Table"] = [transmissions.get("Table", {})]
 
         try:
