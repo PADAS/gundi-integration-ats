@@ -129,6 +129,8 @@ async def get_data_endpoint_response(integration_id, config, auth, parse_respons
     async with httpx.AsyncClient(timeout=120) as session:
         logger.info(f"-- Getting data points for integration ID: {integration_id} Endpoint: {endpoint} --")
         response = await session.get(endpoint, auth=(auth.username, auth.password.get_secret_value()))
+        if response.is_error:  # Log response body on 4xx or 5xx
+            logger.error(f"Error Response body: {response.text}")
         response.raise_for_status()
         if parse_response:
             return parse_data_points_from_xml(xml=response.text)
@@ -178,6 +180,8 @@ async def get_transmissions_endpoint_response(integration_id, config, auth, pars
     async with httpx.AsyncClient(timeout=120) as session:
         logger.info(f"-- Getting transmissions for integration ID: {integration_id} Endpoint: {endpoint} --")
         response = await session.get(endpoint, auth=(auth.username, auth.password.get_secret_value()))
+        if response.is_error:  # Log response body on 4xx or 5xx
+            logger.error(f"Error Response body: {response.text}")
         response.raise_for_status()
         if parse_response:
             return parse_transmissions_from_xml(xml=response.text)
