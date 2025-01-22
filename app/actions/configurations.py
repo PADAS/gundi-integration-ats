@@ -2,8 +2,8 @@ from .core import AuthActionConfiguration, PullActionConfiguration, ExecutableAc
 import pydantic
 
 from enum import Enum
-from ..services.errors import ConfigurationNotFound
-from ..services.utils import find_config_for_action
+from app.services.errors import ConfigurationNotFound
+from app.services.utils import find_config_for_action, GlobalUISchemaOptions
 
 
 class FileStatus(Enum):
@@ -16,10 +16,24 @@ class AuthenticateConfig(AuthActionConfiguration, ExecutableActionMixin):
     username: str
     password: pydantic.SecretStr = pydantic.Field(..., format="password")
 
+    ui_global_options: GlobalUISchemaOptions = GlobalUISchemaOptions(
+        order=[
+            "username",
+            "password",
+        ],
+    )
+
 
 class PullObservationsConfig(PullActionConfiguration):
     data_endpoint: str
     transmissions_endpoint: str
+
+    ui_global_options: GlobalUISchemaOptions = GlobalUISchemaOptions(
+        order=[
+            "data_endpoint",
+            "transmissions_endpoint",
+        ],
+    )
 
 
 class ProcessObservationsConfig(PullActionConfiguration):
