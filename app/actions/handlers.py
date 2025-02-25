@@ -19,7 +19,7 @@ from .configurations import (
     SetFileStatusConfig,
     ReprocessFileConfig
 )
-from ..services.utils import crontab_schedule
+from ..services.action_scheduler import crontab_schedule
 
 logger = logging.getLogger(__name__)
 

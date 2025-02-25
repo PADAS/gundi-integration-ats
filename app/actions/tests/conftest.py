@@ -3,7 +3,7 @@ import pytest
 import datetime
 
 import xmltodict
-from gundi_core.schemas.v2 import Integration
+from gundi_core.schemas.v2 import Integration, IntegrationSummary
 
 from app.actions.ats_client import TransmissionsResponse, DataResponse, ATSBadXMLException
 
@@ -457,3 +457,22 @@ def mock_api_key():
 @pytest.fixture
 def er_client_close_response():
     return {}
+
+
+@pytest.fixture
+def mock_config_manager_ats(mocker, ats_integration_v2):
+
+    async def mock_get_action_configuration(integration_id, action_id):
+        return ats_integration_v2.get_action_config(action_id)
+
+    mock_config_manager_er = mocker.MagicMock()
+    mock_config_manager_er.get_integration.return_value = async_return(
+        IntegrationSummary.from_integration(ats_integration_v2)
+    )
+    mock_config_manager_er.get_integration_details.return_value = async_return(ats_integration_v2)
+    mock_config_manager_er.get_action_configuration.side_effect = mock_get_action_configuration
+    mock_config_manager_er.set_integration.return_value = async_return(None)
+    mock_config_manager_er.set_action_configuration.return_value = async_return(None)
+    mock_config_manager_er.delete_integration.return_value = async_return(None)
+    mock_config_manager_er.delete_action_configuration.return_value = async_return(None)
+    return mock_config_manager_er

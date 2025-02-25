@@ -4,7 +4,7 @@ import asyncio
 from gcloud.aio.storage import Storage
 from app import settings
 
-
+# ToDo. Move this to the template for other integrations needing file support
 class CloudFileStorage:
     def __init__(self, bucket_name=None, root_prefix=None):
         self.root_prefix = root_prefix or settings.GCP_BUCKET_ROOT_PREFIX
