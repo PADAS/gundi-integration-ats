@@ -7,11 +7,12 @@ from ..handlers import PENDING_FILES
 async def test_execute_pull_observations_action(
         mocker, mock_gundi_client_v2, mock_state_manager, mock_file_storage, mock_ats_client,
         mock_get_gundi_api_key, mock_gundi_sensors_client_class, ats_integration_v2,
-        mock_ats_data_parsed, mock_publish_event, mock_gundi_client_v2_class
+        mock_ats_data_parsed, mock_publish_event, mock_gundi_client_v2_class, mock_config_manager_ats
 ):
     mocker.patch("app.services.action_runner._portal", mock_gundi_client_v2)
     mocker.patch("app.services.activity_logger.publish_event", mock_publish_event)
     mocker.patch("app.services.action_runner.publish_event", mock_publish_event)
+    mocker.patch("app.services.action_runner.config_manager", mock_config_manager_ats)
     mocker.patch("app.actions.handlers.state_manager", mock_state_manager)
     mocker.patch("app.actions.handlers.file_storage", mock_file_storage)
     mocker.patch("app.actions.handlers.ats_client", mock_ats_client)

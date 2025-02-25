@@ -110,4 +110,3 @@ async def test_get_integration_details_with_empty_redis_db(
     for config in integration_v2.configurations:
         action_id = config.action.value
         mock_redis_empty.Redis.return_value.get.assert_any_call(f"integrationconfig.{integration_id}.{action_id}")
-
