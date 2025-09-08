@@ -68,10 +68,19 @@ async def test_retrieve_transmissions_xml_from_server(mocker, mock_file_storage,
 
 
 @pytest.mark.asyncio
-async def test_retrieve_transmissions_failure(mocker, mock_ats_client):
-    mock_ats_client.get_transmissions_endpoint_response.side_effect = Exception("Error")
+async def test_retrieve_transmissions_failure(mocker):
+    mocker.patch(
+        "app.actions.ats_client.get_transmissions_endpoint_response",
+        side_effect=Exception("Error")
+    )
+
+    integration_id = "test_integration"
+    auth_config = mocker.Mock()
+    pull_config = mocker.Mock()
+    file_prefix = "test_prefix"
+
     with pytest.raises(Exception):
-        await retrieve_transmissions(mock_ats_client)
+        await retrieve_transmissions(integration_id, auth_config, pull_config, file_prefix)
 
 
 @pytest.mark.asyncio
@@ -108,7 +117,16 @@ async def test_retrieve_data_points_xml_from_server(mocker, mock_file_storage, m
 
 
 @pytest.mark.asyncio
-async def test_retrieve_data_points_failure(mocker, mock_ats_client):
-    mock_ats_client.get_data_endpoint_response.side_effect = Exception("Error")
+async def test_retrieve_data_points_failure(mocker):
+    mocker.patch(
+        "app.actions.ats_client.get_transmissions_endpoint_response",
+        side_effect=Exception("Error")
+    )
+
+    integration_id = "test_integration"
+    auth_config = mocker.Mock()
+    pull_config = mocker.Mock()
+    file_prefix = "test_prefix"
+
     with pytest.raises(Exception):
-        await retrieve_data_points(mock_ats_client)
+        await retrieve_data_points(integration_id, auth_config, pull_config, file_prefix)
