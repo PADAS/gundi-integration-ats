@@ -1,6 +1,6 @@
 import pytest
 from app.services.action_runner import execute_action
-from app.actions.handlers import PENDING_FILES, retrieve_transmissions, retrieve_data_points
+from app.actions.handlers import PENDING_FILES
 
 
 @pytest.mark.asyncio
