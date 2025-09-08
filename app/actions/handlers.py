@@ -24,8 +24,6 @@ from app.actions.configurations import (
 )
 from app.services.action_scheduler import crontab_schedule
 
-import xml.etree.ElementTree as ET
-
 logger = logging.getLogger(__name__)
 
 
@@ -36,13 +34,6 @@ file_storage = CloudFileStorage()
 PENDING_FILES = "ats_pending_files"
 IN_PROGRESS_FILES = "ats_in_progress_files"
 PROCESSED_FILES = "ats_processed_files"
-
-
-def normalize_xml_string(xml_str):
-    # Unescape only if needed
-    if '\\"' in xml_str or '\\/' in xml_str:
-        xml_str = xml_str.replace('\\"', '"').replace('\\/', '/')
-    return xml_str
 
 
 def extract_gmt_offsets(transmissions, integration_id):
@@ -132,23 +123,6 @@ async def retrieve_transmissions(integration_id, auth_config, pull_config, file_
         auth=auth_config
     )
 
-    # Validate if XML parsing is correct
-    try:
-        ET.fromstring(normalize_xml_string(transmissions_raw_xml))
-    except ET.ParseError as e:
-        message = f"Transmissions XML parsing failed for integration {integration_id} Username: {auth_config.username}."
-        logger.error(message)
-        await log_action_activity(
-            integration_id=integration_id,
-            action_id="pull_observations",
-            title=message,
-            level=LogLevel.ERROR,
-            data={
-                "response": transmissions_raw_xml
-            }
-        )
-        raise e
-
     transmissions_file_name = f"{file_prefix}_transmissions.xml"
     logger.info(f"Saving transmissions for integration '{integration_id}' to file '{transmissions_file_name}'...")
     async with aiofiles.open(f"/tmp/{transmissions_file_name}", "w") as f:
@@ -177,23 +151,6 @@ async def retrieve_data_points(integration_id, auth_config, pull_config, file_pr
         config=pull_config,
         auth=auth_config
     )
-
-    # Validate if XML parsing is correct
-    try:
-        ET.fromstring(normalize_xml_string(data_points_raw_xml))
-    except ET.ParseError as e:
-        message = f"Data points XML parsing failed for integration {integration_id} Username: {auth_config.username}."
-        logger.error(message)
-        await log_action_activity(
-            integration_id=integration_id,
-            action_id="pull_observations",
-            title=message,
-            level=LogLevel.ERROR,
-            data={
-                "response": data_points_raw_xml
-            }
-        )
-        raise e
 
     data_points_file_name = f"{file_prefix}_data_points.xml"
     logger.info(f"Saving data points for integration '{integration_id}' to file '{data_points_file_name}'...")
