@@ -3,14 +3,14 @@ import pytest
 import respx
 import xmltodict
 
-from ..ats_client import (
+from app.actions.ats_client import (
     get_transmissions_endpoint_response,
     get_data_endpoint_response,
     parse_data_points_from_xml,
     parse_transmissions_from_xml,
     ATSBadXMLException,
 )
-from ..configurations import PullObservationsConfig, AuthenticateConfig
+from app.actions.configurations import PullObservationsConfig, AuthenticateConfig
 
 
 @pytest.mark.asyncio
@@ -139,5 +139,3 @@ def test_parse_data_points_from_xml_with_single_point(
 def test_parse_data_points_from_escaped_xml(mock_ats_data_response_escaped_xml):
     result = parse_data_points_from_xml(mock_ats_data_response_escaped_xml)
     assert result == {}
-
-
