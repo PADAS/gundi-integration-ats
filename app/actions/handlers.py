@@ -3,6 +3,7 @@ import datetime
 import aiohttp
 import logging
 import aiofiles
+import httpx
 from gundi_core.schemas.v2.gundi import LogLevel
 from app import settings
 from app.actions import ats_client
@@ -10,16 +11,18 @@ import app.services.gundi as gundi_tools
 from app.services.activity_logger import activity_logger, log_action_activity
 from app.services.state import IntegrationStateManager
 from app.services.file_storage import CloudFileStorage
-from .configurations import (
+from app.actions.configurations import (
     FileStatus,
+    AuthenticateConfig,
     PullObservationsConfig,
     ProcessObservationsConfig,
     get_auth_config,
+    get_pull_config,
     GetFileStatusConfig,
     SetFileStatusConfig,
     ReprocessFileConfig
 )
-from ..services.action_scheduler import crontab_schedule
+from app.services.action_scheduler import crontab_schedule
 
 logger = logging.getLogger(__name__)
 
@@ -173,6 +176,27 @@ async def retrieve_data_points(integration_id, auth_config, pull_config, file_pr
     )
     logger.info(f"Data points file {data_points_file_name} saved.")
     return data_points_file_name
+
+
+async def action_auth(integration, action_config: AuthenticateConfig):
+    logger.info(f"Executing 'auth' action with integration ID {integration.id} and action_config {action_config}...")
+    pull_config = get_pull_config(integration)
+    try:
+        logger.info(f"Retrieving transmissions for integration '{integration.id}'...")
+        response = await ats_client.get_transmissions_endpoint_response(
+            integration_id=integration.id,
+            config=pull_config,
+            auth=action_config
+        )
+        if response:
+            return {"valid_credentials": True}
+        logger.warning(f"-- Login failed for integration ID: {integration.id} Username: {action_config.username} --")
+        return {"valid_credentials": False, "message": f"Failed to login: {response}"}
+    except httpx.HTTPStatusError as e:
+        logger.warning(f"-- Login failed for integration ID: {integration.id} Username: {action_config.username} --")
+        if e.response.status_code == 401:
+            return {"valid_credentials": False, "message": f"Bad credentials"}
+        return {"status": "error", "status_code": e.response.status_code, "message": str(e)}
 
 
 @crontab_schedule("*/10 * * * *")  # Run every 10 minutes

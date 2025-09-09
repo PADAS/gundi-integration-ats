@@ -140,6 +140,12 @@ def mock_ats_transmissions_response_single_point_xml():
 
 
 @pytest.fixture
+def mock_ats_transmissions_response_escaped_xml():
+    with open("app/actions/tests/files/ats_transmissions_escaped_characters.xml") as f:
+        return f.read()
+
+
+@pytest.fixture
 def mock_ats_transmissions_parsed(mock_ats_transmissions_response_xml):
     return [
         TransmissionsResponse(
@@ -243,6 +249,12 @@ def mock_ats_data_response_no_points_xml():
 @pytest.fixture
 def mock_ats_data_response_single_point_xml():
     with open("app/actions/tests/files/ats_data_points_single_point.xml") as f:
+        return f.read()
+
+
+@pytest.fixture
+def mock_ats_data_response_escaped_xml():
+    with open("app/actions/tests/files/ats_data_points_escaped_characters.xml") as f:
         return f.read()
 
 

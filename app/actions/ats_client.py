@@ -64,6 +64,16 @@ class ATSBadXMLException(Exception):
         super().__init__(f"'{self.status_code}: {self.message}, Error: {self.error}'")
 
 
+def normalize_xml_string(xml_str):
+    # Remove surrounding quotes if present
+    xml_str = xml_str.strip('"')
+
+    # Unescape only if needed
+    if '\\"' in xml_str or '\\/' in xml_str:
+        xml_str = xml_str.replace('\\"', '"').replace('\\/', '/')
+    return xml_str
+
+
 def closest_transmission(transmissions, test_date):
     sorted_list = sorted([t.DateSent for t in transmissions])
     previous_date = sorted_list[-1]
@@ -81,7 +91,7 @@ def parse_data_points_from_xml(xml):
     result = {}
     try:
         logger.info(f"-- Parsing response (xmltodict) --")
-        parsed_xml = xmltodict.parse(xml)
+        parsed_xml = xmltodict.parse(normalize_xml_string(xml))
     except (xmltodict.ParsingInterrupted, ExpatError) as e:
         msg = f"Invalid XML."
         logger.exception(msg)
@@ -142,7 +152,7 @@ def parse_transmissions_from_xml(xml):
     result = {}
     try:
         logger.info(f"-- Parsing transmissions XML (xmltodict) --")
-        parsed_xml = xmltodict.parse(xml)
+        parsed_xml = xmltodict.parse(normalize_xml_string(xml))
     except (xmltodict.ParsingInterrupted, ExpatError) as e:
         msg = f"Invalid XML."
         logger.exception(msg)
