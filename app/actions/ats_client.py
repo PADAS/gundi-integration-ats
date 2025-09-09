@@ -66,8 +66,7 @@ class ATSBadXMLException(Exception):
 
 def normalize_xml_string(xml_str):
     # Remove surrounding quotes if present
-    if xml_str.startswith('"') and xml_str.endswith('"'):
-        xml_str = xml_str[1:-1]
+    xml_str = xml_str.strip('"')
 
     # Unescape only if needed
     if '\\"' in xml_str or '\\/' in xml_str:
